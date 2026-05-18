@@ -1,28 +1,66 @@
-"use client"
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-// import { Github, Twitter } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useRouter } from 'next/navigation';
-import { Separator } from "@/components/ui/separator";
+import { loginUser } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
 
-   const handleSubmit = (e: React.SyntheticEvent) => {
-    e.preventDefault()          // ← stops the # redirect
-   
-    router.push("/dashboard")   // ← redirect to dashboard
-  }
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
+  const [data, setData] = useState({
+    email: "",
+    password: "",
+    rememberMe: false,
+  });
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      setLoading(true);
+
+      const res = await loginUser({
+        email: data.email,
+        password: data.password,
+      });
+
+      console.log("login success:", res);
+      router.push("/dashboard");
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Login failed");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    setData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   return (
     <section className="flex min-h-screen w-full items-center justify-center py-4 lg:py-20">
       <div className="w-full max-w-sm space-y-6">
-        <h2 className="mt-6 font-bold text-3xl">Sign in to your account</h2>
-        <form  className="space-y-6">
+        <h2 className="mt-6 text-3xl font-bold">Sign in to your account</h2>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="email">Email address</Label>
             <Input
@@ -31,9 +69,12 @@ export default function LoginPage() {
               type="email"
               autoComplete="email"
               required
+              value={data.email}
               className="mt-1"
+              onChange={handleChange}
             />
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <Input
@@ -43,15 +84,26 @@ export default function LoginPage() {
               autoComplete="current-password"
               required
               className="mt-1"
+              value={data.password}
+              onChange={handleChange}
             />
           </div>
 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Checkbox id="rememberMe" />
+              <Checkbox
+                id="rememberMe"
+                checked={data.rememberMe}
+                onCheckedChange={(checked) => {
+                  setData((prev) => ({
+                    ...prev,
+                    rememberMe: checked as boolean,
+                  }));
+                }}
+              />
               <label
                 htmlFor="rememberMe"
-                className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="text-sm leading-none font-medium"
               >
                 Remember me
               </label>
@@ -62,49 +114,12 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <div>
-          
-            <Button onClick={handleSubmit} type="submit" className="w-full">
-              Signin
-            </Button>
-           
-          </div>
+          {error && <p className="text-sm text-red-500">{error}</p>}
+
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Signing in..." : "Signin"}
+          </Button>
         </form>
-
-        <div className="space-y-6 lg:mt-10">
-          {/* <div className="w-full max-w-sm">
-            <div className="relative flex items-center gap-2">
-              <Separator className="flex-1" />
-              <span className="text-muted-foreground shrink-0 text-sm">
-                or continue with
-              </span>
-              <Separator className="flex-1" />
-            </div>
-          </div> */}
-
-           {/* <div className="grid grid-cols-3 gap-3">
-            <Button variant="outline">
-              <Github />
-              <span className="sr-only">GitHub</span>
-            </Button>
-            <Button variant="outline">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                width="24"
-                height="24"
-              >
-                <path d="M12 2a9.96 9.96 0 0 1 6.29 2.226a1 1 0 0 1 .04 1.52l-1.51 1.362a1 1 0 0 1 -1.265 .06a6 6 0 1 0 2.103 6.836l.001 -.004h-3.66a1 1 0 0 1 -.992 -.883l-.007 -.117v-2a1 1 0 0 1 1 -1h6.945a1 1 0 0 1 .994 .89c.04 .367 .061 .737 .061 1.11c0 5.523 -4.477 10 -10 10s-10 -4.477 -10 -10s4.477 -10 10 -10z"></path>
-              </svg>
-              <span className="sr-only">Google</span>
-            </Button>
-            <Button variant="outline">
-              <Twitter />
-              <span className="sr-only">Twitter</span>
-            </Button>
-          </div> */}
-        </div>
       </div>
     </section>
   );
