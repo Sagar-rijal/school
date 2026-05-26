@@ -11,7 +11,7 @@ export type SchoolPayload = {
     board: string;
     medium: string;
     type: string;
-    establishedYear: number;
+    establishedYear: string | number;
   };
   contact_info: {
     email: string;
