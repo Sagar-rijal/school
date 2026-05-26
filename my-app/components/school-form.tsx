@@ -1,46 +1,60 @@
-// src/components/AddSchoolForm.tsx
+// src/components/SchoolForm.tsx
 "use client";
 
 import { useState } from "react";
-import type { ChangeEvent } from "react";
-import { addSchool } from "@/lib/school";
+import type { ChangeEvent, SubmitEventHandler } from "react";
 
-export default function AddSchoolForm() {
+// 1. Define the Types for our Props and Data
+export interface SchoolDataPayload {
+  school_info: {
+    name: string;
+    board: string;
+    medium: string;
+    type: string;
+    establishedYear: string | number;
+  };
+  contact_info: {
+    email: string;
+    phone: string;
+    website: string;
+    brandingLogo: string;
+  };
+  address: {
+    addressLine1: string;
+    addressLine2: string;
+    city: string;
+    state: string;
+    pincode: string;
+    country: string;
+  };
+}
+
+interface SchoolFormProps {
+  initialData?: SchoolDataPayload; // Will be passed when editing
+  onSubmit: (payload: SchoolDataPayload & { status: number }) => Promise<{ data?: { school_id?: string } }>;
+  isEditMode?: boolean; // Tells the UI to say "Edit" or "Add"
+}
+
+export default function SchoolForm({ initialData, onSubmit, isEditMode = false }: SchoolFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [schoolId, setSchoolId] = useState("");
 
-  const [formData, setFormData] = useState({
-    school_info: {
-      name: "",
-      board: "",
-      medium: "",
-      type: "",
-      establishedYear: "",
-    },
-    contact_info: {
-      email: "",
-      phone: "",
-      website: "",
-      brandingLogo: "",
-    },
-    address: {
-      addressLine1: "",
-      addressLine2: "",
-      city: "",
-      state: "",
-      pincode: "",
-      country: "",
-    },
-  });
+  // 2. Initialize state with initialData if it exists, otherwise use empty strings
+  const [formData, setFormData] = useState<SchoolDataPayload>(
+    initialData || {
+      school_info: { name: "", board: "", medium: "", type: "", establishedYear: "" },
+      contact_info: { email: "", phone: "", website: "", brandingLogo: "" },
+      address: { addressLine1: "", addressLine2: "", city: "", state: "", pincode: "", country: "" },
+    }
+  );
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement>,
     section: "school_info" | "contact_info" | "address"
   ) => {
     const { name, value } = e.target;
-
     setFormData((prev) => ({
       ...prev,
       [section]: {
@@ -50,7 +64,8 @@ export default function AddSchoolForm() {
     }));
   };
 
-  const handleSubmit = async (e : React.SyntheticEvent<HTMLFormElement>) => {
+  // 3. We removed the hardcoded `addSchool` and replaced it with the `onSubmit` prop
+ const handleSubmit: SubmitEventHandler<HTMLFormElement>= async (e) =>  {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -65,20 +80,24 @@ export default function AddSchoolForm() {
         },
         contact_info: formData.contact_info,
         address: formData.address,
-        status: 1,
+        status: 1, // Assuming status 1 is active
       };
 
-      const res = await addSchool(payload);
+      // Call the parent's function (could be POST or PUT)
+      const res = await onSubmit(payload);
 
-      setSuccess("School added successfully");
-      setSchoolId(res.data.school_id);
-
-      localStorage.setItem("schoolId", res.data.school_id);
+      setSuccess(isEditMode ? "School updated successfully!" : "School added successfully!");
+      
+      // Only set/save schoolId if we are adding a new school and the backend returns it
+      if (!isEditMode && res?.data?.school_id) {
+        setSchoolId(res.data.school_id);
+        localStorage.setItem("schoolId", res.data.school_id);
+      }
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Failed to add school");
+        setError(isEditMode ? "Failed to update school" : "Failed to add school");
       }
     } finally {
       setLoading(false);
@@ -86,18 +105,20 @@ export default function AddSchoolForm() {
   };
 
   return (
-    <section className="mx-1 my-1shadow p-6 md:mx-20 md:my-10 rounded-2xl">
-      <h1 className="mb-6 text-2xl font-bold">Add School</h1>
+    <section className=" p-6 md:mx-40 ">
+      {/* 4. Dynamic Titles based on Mode */}
+      <h1 className="mb-6 text-2xl font-bold text-center md:mx-auto md: w-1/2">
+        {isEditMode ? "Edit School" : "Add School"}
+      </h1>
 
-      <form onSubmit={handleSubmit} className="space-y-8 rounded-xl border p-6">
+      <form onSubmit={handleSubmit} className="space-y-8 rounded-xl border p-6 shadow-2xl">
         <div>
           <h2 className="mb-4 text-lg font-semibold">School Info</h2>
-          <div className="grid gap-4 md:grid-cols-2 ">
+          <div className="grid gap-4 md:grid-cols-2">
             <input
               name="name"
               type="text"
               placeholder="School Name"
-              required
               value={formData.school_info.name}
               onChange={(e) => handleChange(e, "school_info")}
               className="rounded-md border p-3 shadow"
@@ -105,8 +126,7 @@ export default function AddSchoolForm() {
             <input
               name="board"
               type="text"
-              placeholder="Board"
-              required
+              placeholder="Board (e.g., CBSE)"
               value={formData.school_info.board}
               onChange={(e) => handleChange(e, "school_info")}
               className="rounded-md border p-3 shadow"
@@ -114,8 +134,7 @@ export default function AddSchoolForm() {
             <input
               name="medium"
               type="text"
-              placeholder="Medium"
-              required
+              placeholder="Medium (e.g., ENGLISH)"
               value={formData.school_info.medium}
               onChange={(e) => handleChange(e, "school_info")}
               className="rounded-md border p-3 shadow"
@@ -123,8 +142,7 @@ export default function AddSchoolForm() {
             <input
               name="type"
               type="text"
-              placeholder="Type"
-              required
+              placeholder="Type (e.g., PRIVATE)"
               value={formData.school_info.type}
               onChange={(e) => handleChange(e, "school_info")}
               className="rounded-md border p-3 shadow"
@@ -133,7 +151,6 @@ export default function AddSchoolForm() {
               name="establishedYear"
               type="number"
               placeholder="Established Year"
-              required
               value={formData.school_info.establishedYear}
               onChange={(e) => handleChange(e, "school_info")}
               className="rounded-md border p-3 shadow"
@@ -148,7 +165,6 @@ export default function AddSchoolForm() {
               name="email"
               type="email"
               placeholder="Email"
-              required
               value={formData.contact_info.email}
               onChange={(e) => handleChange(e, "contact_info")}
               className="rounded-md border p-3 shadow"
@@ -157,7 +173,6 @@ export default function AddSchoolForm() {
               name="phone"
               type="text"
               placeholder="Phone"
-              required
               value={formData.contact_info.phone}
               onChange={(e) => handleChange(e, "contact_info")}
               className="rounded-md border p-3 shadow"
@@ -188,7 +203,6 @@ export default function AddSchoolForm() {
               name="addressLine1"
               type="text"
               placeholder="Address Line 1"
-              required
               value={formData.address.addressLine1}
               onChange={(e) => handleChange(e, "address")}
               className="rounded-md border p-3 shadow"
@@ -196,7 +210,7 @@ export default function AddSchoolForm() {
             <input
               name="addressLine2"
               type="text"
-              placeholder="Address Line 2 (Optional)"
+              placeholder="Address Line 2"
               value={formData.address.addressLine2}
               onChange={(e) => handleChange(e, "address")}
               className="rounded-md border p-3 shadow"
@@ -205,7 +219,6 @@ export default function AddSchoolForm() {
               name="city"
               type="text"
               placeholder="City"
-              required
               value={formData.address.city}
               onChange={(e) => handleChange(e, "address")}
               className="rounded-md border p-3 shadow"
@@ -214,7 +227,6 @@ export default function AddSchoolForm() {
               name="state"
               type="text"
               placeholder="State"
-              required
               value={formData.address.state}
               onChange={(e) => handleChange(e, "address")}
               className="rounded-md border p-3 shadow"
@@ -223,7 +235,6 @@ export default function AddSchoolForm() {
               name="pincode"
               type="text"
               placeholder="Pincode"
-              required
               value={formData.address.pincode}
               onChange={(e) => handleChange(e, "address")}
               className="rounded-md border p-3 shadow"
@@ -232,7 +243,6 @@ export default function AddSchoolForm() {
               name="country"
               type="text"
               placeholder="Country"
-              required
               value={formData.address.country}
               onChange={(e) => handleChange(e, "address")}
               className="rounded-md border p-3 shadow"
@@ -242,14 +252,14 @@ export default function AddSchoolForm() {
 
         {error && <p className="text-sm text-red-500">{error}</p>}
         {success && <p className="text-sm text-green-600">{success}</p>}
-        {schoolId && <p className="text-sm text-blue-600">School ID: {schoolId}</p>}
+        {schoolId && !isEditMode && <p className="text-sm text-blue-600">School ID: {schoolId}</p>}
 
         <button
           type="submit"
           disabled={loading}
           className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
         >
-          {loading ? "Submitting..." : "Add School"}
+          {loading ? "Submitting..." : isEditMode ? "Save Changes" : "Add School"}
         </button>
       </form>
     </section>
