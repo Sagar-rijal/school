@@ -1,13 +1,22 @@
 "use client";
-import SchoolForm from "@/components/school-form";
+import SchoolForm, { SchoolDataPayload } from "@/components/school-form";
 import { addSchool } from "@/lib/school";
 
 export default function AddSchoolPage() {
-  // We pass the addSchool API function directly into the component
+  const handleSubmit = (payload: SchoolDataPayload & { status: number }) => {
+    return addSchool({
+      ...payload,
+      school_info: {
+        ...payload.school_info,
+        establishedYear: Number(payload.school_info.establishedYear),
+      },
+    });
+  };
+
   return (
-    <SchoolForm 
-      onSubmit={addSchool} 
-      isEditMode={false} 
+    <SchoolForm
+      onSubmit={handleSubmit}
+      isEditMode={false}
     />
   );
 }
