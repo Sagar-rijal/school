@@ -4,6 +4,12 @@ export type LoginPayload = {
   email: string;
   password: string;
 };
+export type RegisterPayload = {
+  name: string;
+  phone_number: string;
+  email: string;
+  password: string;
+};
 
 export type SchoolPayload = {
   school_info: {
