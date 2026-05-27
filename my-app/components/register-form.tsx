@@ -53,53 +53,67 @@ export default function RegisterForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <input
-        type="text"
-        name="name"
-        placeholder="Enter name"
-        value={formData.name}
-        onChange={handleChange}
-        className="w-full rounded border p-3"
-      />
+   <form
+  onSubmit={handleSubmit}
+  className="mx-auto mt-10 w-[90%] max-w-lg space-y-5 rounded-2xl border border-gray-200 bg-white p-6 shadow-xl md:mt-20 md:p-10"
+>
+  <h2 className="text-center text-3xl font-bold text-black">
+    Create Account
+  </h2>
 
-      <input
-        type="text"
-        name="phone_number"
-        placeholder="Enter phone number"
-        value={formData.phone_number}
-        onChange={handleChange}
-        className="w-full rounded border p-3"
-      />
+  <p className="text-center text-sm text-gray-500">
+    Fill in your details to register
+  </p>
 
-      <input
-        type="email"
-        name="email"
-        placeholder="Enter email"
-        value={formData.email}
-        onChange={handleChange}
-        className="w-full rounded border p-3"
-      />
+  <input
+    type="text"
+    name="name"
+    placeholder="Enter name"
+    value={formData.name}
+    onChange={handleChange}
+    className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 outline-none transition-all duration-200 focus:border-black focus:bg-white focus:ring-2 focus:ring-gray-300"
+  />
 
-      <input
-        type="password"
-        name="password"
-        placeholder="Enter password"
-        value={formData.password}
-        onChange={handleChange}
-        className="w-full rounded border p-3"
-      />
+  <input
+    type="text"
+    name="phone_number"
+    placeholder="Enter phone number"
+    value={formData.phone_number}
+    onChange={handleChange}
+    className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 outline-none transition-all duration-200 focus:border-black focus:bg-white focus:ring-2 focus:ring-gray-300"
+  />
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
-      {success && <p className="text-sm text-green-600">{success}</p>}
+  <input
+    type="email"
+    name="email"
+    placeholder="Enter email"
+    value={formData.email}
+    onChange={handleChange}
+    className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 outline-none transition-all duration-200 focus:border-black focus:bg-white focus:ring-2 focus:ring-gray-300"
+  />
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded bg-black px-4 py-3 text-white"
-      >
-        {loading ? "Registering..." : "Register"}
-      </button>
-    </form>
+  <input
+    type="password"
+    name="password"
+    placeholder="Enter password"
+    value={formData.password}
+    onChange={handleChange}
+    className="w-full rounded-xl border border-gray-300 bg-gray-50 p-3 outline-none transition-all duration-200 focus:border-black focus:bg-white focus:ring-2 focus:ring-gray-300"
+  />
+
+  {error && <p className="text-sm text-red-500">{error}</p>}
+
+  {success && (
+    <p className="text-sm text-green-600">{success}</p>
+  )}
+
+  <button
+    type="submit"
+    disabled={loading}
+    className="w-full rounded-xl bg-black px-4 py-3 font-semibold text-white transition-all duration-200 hover:scale-[1.02] hover:bg-gray-800 active:scale-[0.98]"
+  >
+    {loading ? "Registering..." : "Register"}
+  </button>
+</form>
   );
 }
