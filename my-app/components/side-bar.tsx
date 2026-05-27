@@ -28,7 +28,7 @@ const links = [
 export default function Sidebar() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
-  const containerRef = useRef(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const user = {
     email: "user@example.com",
