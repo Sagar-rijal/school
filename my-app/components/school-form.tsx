@@ -20,7 +20,7 @@ export interface SchoolDataPayload {
     brandingLogo: string;
   };
   address: {
-    addressLine1: string;
+    addressLine1: string;    m,ml,
     addressLine2: string;
     city: string;
     state: string;
