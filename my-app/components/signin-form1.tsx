@@ -25,25 +25,26 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
 
-    try {
-      setLoading(true);
+   try {
+  setLoading(true);
 
-      const res = await loginUser({
-        email: data.email,
-        password: data.password,
-      });
+  const res = await loginUser({
+    email: data.email,
+    password: data.password,
+  });
 
-      console.log("login success:", res);
-      router.push("/dashboard");
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Login failed");
-      }
-    } finally {
-      setLoading(false);
-    }
+  console.log("login success:", res);
+  localStorage.setItem("isLoggedIn", "true");
+  router.push("/dashboard");
+} catch (err) {
+  if (err instanceof Error) {
+    setError(err.message);
+  } else {
+    setError("Login failed");
+  }
+} finally {
+  setLoading(false);
+}
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
