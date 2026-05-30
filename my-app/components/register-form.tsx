@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { ChangeEvent, SubmitEvent } from "react";
+import type { ChangeEvent } from "react";
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -24,7 +24,7 @@ export default function RegisterForm() {
     }));
   };
 
-  const handleSubmit = async (e: SubmitEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     setLoading(true);
