@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8081/api/v1/school-backend";
+const BASE_URL = "https://9v1s3gvk-8081.inc1.devtunnels.ms/";
 
 type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "DELETE";
