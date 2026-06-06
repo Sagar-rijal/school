@@ -20,9 +20,9 @@ const links = [
   { href: "/dashboard/students", label: "Students", icon: Users },
   { href: "/dashboard/teachers", label: "Teachers", icon: UserRound },
   { href: "/dashboard/classes", label: "Classes", icon: School },
-  { href: "/dashboard/fees", label: "Fees", icon: IndianRupee },
-  { href: "/dashboard/attendance", label: "Attendance", icon: CalendarCheck2 },
-  { href: "/dashboard/reports", label: "Reports", icon: FileBarChart2 },
+  { href: "/dashboard/register-user", label: "Register-user", icon: IndianRupee },
+  { href: "/dashboard/update-school", label: "Update-school", icon: CalendarCheck2 },
+  { href: "/dashboard/register", label: "Add school", icon: FileBarChart2 },
 ]
 
 export default function Sidebar() {

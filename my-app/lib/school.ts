@@ -14,7 +14,11 @@ export function addSchool(schoolData: SchoolPayload) {
     body: payload,
   });
 }
-
+export function getAllSchool() {
+  return apiRequest(`/tenant/`, {
+    method: "GET",
+  });
+}
 export function getSchool(schoolId: string) {
   return apiRequest(`/tenant/${schoolId}`, {
     method: "GET",
