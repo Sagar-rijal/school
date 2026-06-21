@@ -12,6 +12,7 @@ export type RegisterPayload = {
 };
 
 export type SchoolPayload = {
+  _id?: string; 
   school_info: {
     name: string;
     board: string;
