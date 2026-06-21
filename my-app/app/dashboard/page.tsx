@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link"; // For navigating to the edit page
-import { getAllSchool } from "@/lib/school"; // Adjust path if needed
+import Link from "next/link";
+import { getAllSchool } from "@/lib/school";
 import { SchoolPayload } from "@/lib/type";
 
 export default function AllSchoolsPage() {
@@ -11,22 +11,34 @@ export default function AllSchoolsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchSchools = async () => {
-      try {
-        const res = await getAllSchool();
-        // Adjust "res.data" if your backend returns the array inside a different property
-        setSchools(res.data || []); 
-      } catch (err) {
-        console.error("Failed to fetch schools", err);
-        setError("Failed to load schools. Please try again.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchSchools = async () => {
+    setIsLoading(true);   // ← reset loading on every mount
+    setError(null);       // ← reset error too
+    try {
+      const res = await getAllSchool();
+      setSchools(res.data || []);
+    } catch (err) {
+      console.error("Failed to fetch schools", err);
+      setError("Failed to load schools. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
 
-    fetchSchools();
-  }, []);
+  fetchSchools();
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === "visible") {
+      fetchSchools();
+    }
+  };
 
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+
+  return () => {
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+  };
+}, []);
   // 1. Loading State
   if (isLoading) return <div className="p-6 text-gray-600">Loading school data...</div>;
 
@@ -41,7 +53,6 @@ export default function AllSchoolsPage() {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">All Schools</h1>
-        {/* Optional: A button to go to your Add School page */}
         <Link 
           href="/schools/add" 
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
@@ -63,7 +74,7 @@ export default function AllSchoolsPage() {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {schools.map((school) => (
-              <tr key={school.id || school.school_info?.name} className="hover:bg-gray-50">
+              <tr key={school._id || school.school_info?.name} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="font-medium text-gray-900">{school.school_info?.name}</div>
                   <div className="text-sm text-gray-500">{school.school_info?.type}</div>
@@ -82,9 +93,8 @@ export default function AllSchoolsPage() {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  {/* Assumes your edit route looks like /schools/[id] */}
                   <Link 
-                    href={`/schools/${school.id}`} 
+                    href={`/schools/${school._id}`} 
                     className="text-indigo-600 hover:text-indigo-900"
                   >
                     Edit

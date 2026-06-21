@@ -15,7 +15,7 @@ export function addSchool(schoolData: SchoolPayload) {
   });
 }
 export function getAllSchool() {
-  return apiRequest(`/tenant/`, {
+  return apiRequest("/tenant/", {
     method: "GET",
   });
 }
