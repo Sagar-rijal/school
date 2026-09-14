@@ -25,6 +25,39 @@ export function formatDate(value?: string | null) {
   })
 }
 
+/** "PARTIALLY_PAID" → "Partially paid" */
+export function formatEnum(value: string) {
+  const text = value.replace(/_/g, " ").toLowerCase()
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+export function formatCurrency(amount?: number | null) {
+  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(amount ?? 0)
+}
+
+/** "Priya Sharma" from a record with first_name/last_name. */
+export function fullName(person?: { first_name?: string; last_name?: string } | null) {
+  return person ? [person.first_name, person.last_name].filter(Boolean).join(" ") : ""
+}
+
+/** Today as YYYY-MM-DD in local time (for <input type="date">). */
+export function todayInput() {
+  const d = new Date()
+  const pad = (n: number) => String(n).padStart(2, "0")
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+/** Numbers from inputs: "" → null, otherwise the number. */
+export function toNumberOrNull(value: string) {
+  return value.trim() === "" ? null : Number(value)
+}
+
+/** Empty strings → null, for optional backend fields. */
+export function emptyToNull(value: string) {
+  const trimmed = value.trim()
+  return trimmed === "" ? null : trimmed
+}
+
 /** Sort by display_order, then name ("Class 2" before "Class 10"). */
 export function byDisplayOrder<T extends { display_order?: number; name: string }>(a: T, b: T) {
   return (

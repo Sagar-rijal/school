@@ -8,22 +8,37 @@ import {
   CalendarRange,
   Layers,
   BookOpen,
+  BriefcaseBusiness,
   UserPlus,
   UserCircle,
   LogOut,
   Menu,
   X,
+  type LucideIcon,
 } from "lucide-react"
 import { logoutUser } from "@/lib/auth"
 import { useAuthStore } from "@/store/useAuthStore"
 
+type NavLink = { href: string; label: string; icon: LucideIcon }
+
 // Add a link here as each feature's pages are built
-const links = [
-  { href: "/dashboard/schools", label: "Schools", icon: School },
-  { href: "/dashboard/academic-years", label: "Academic years", icon: CalendarRange },
-  { href: "/dashboard/classes", label: "Classes", icon: Layers },
-  { href: "/dashboard/subjects", label: "Subjects", icon: BookOpen },
-  { href: "/dashboard/users", label: "Users & roles", icon: UserPlus },
+const groups: { title: string; links: NavLink[] }[] = [
+  {
+    title: "Setup",
+    links: [
+      { href: "/dashboard/schools", label: "Schools", icon: School },
+      { href: "/dashboard/academic-years", label: "Academic years", icon: CalendarRange },
+      { href: "/dashboard/classes", label: "Classes", icon: Layers },
+      { href: "/dashboard/subjects", label: "Subjects", icon: BookOpen },
+    ],
+  },
+  {
+    title: "People",
+    links: [
+      { href: "/dashboard/staff", label: "Staff", icon: BriefcaseBusiness },
+      { href: "/dashboard/users", label: "Users & roles", icon: UserPlus },
+    ],
+  },
 ]
 
 function SidebarContent({
@@ -71,29 +86,34 @@ function SidebarContent({
       </div>
 
       {/* Nav Links */}
-      <nav className="flex-1 space-y-1">
-        {links.map((link) => {
-          const Icon = link.icon
-          const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`)
+      <nav className="-mx-1 min-h-0 flex-1 space-y-4 overflow-y-auto px-1">
+        {groups.map((group) => (
+          <div key={group.title} className="space-y-1">
+            <p className="px-3 text-xs font-medium uppercase tracking-wide text-muted-foreground/70">{group.title}</p>
+            {group.links.map((link) => {
+              const Icon = link.icon
+              const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`)
 
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={onNavigate}
-              className={`
-                flex items-center gap-3 px-3 py-2 rounded-md text-md font-medium transition-colors
-                ${isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                }
-              `}
-            >
-              <Icon className="w-5 h-5" />
-              {link.label}
-            </Link>
-          )
-        })}
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={onNavigate}
+                  className={`
+                    flex items-center gap-3 px-3 py-1.5 rounded-md text-sm font-medium transition-colors
+                    ${isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    }
+                  `}
+                >
+                  <Icon className="w-4 h-4" />
+                  {link.label}
+                </Link>
+              )
+            })}
+          </div>
+        ))}
       </nav>
 
       {/* Bottom Profile */}
