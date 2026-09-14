@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, PageHeader } from "@/components/form";
 import { Card, DetailList, Loading, StatusBadge } from "@/components/data-display";
 import StaffForm from "@/components/staff/staff-form";
+import TeacherClassesCard from "@/components/staff/teacher-classes-card";
 import { useQuery } from "@/hooks/use-query";
 import { listSubjects } from "@/lib/academic";
 import { getStaffMember, listDepartments, toStaffUpdate, updateStaff } from "@/lib/staff";
@@ -62,6 +63,8 @@ export default function StaffMemberPage({ params }: { params: Promise<{ id: stri
               ]}
             />
           </Card>
+
+          {data.staff_type === "TEACHING" && <TeacherClassesCard userId={data.user_id} />}
 
           <div>
             <h2 className="mb-3 font-semibold">Edit details</h2>

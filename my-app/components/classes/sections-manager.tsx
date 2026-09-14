@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import type { SubmitEvent } from "react";
 import { Check, Pencil, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ function sortByName(sections: Section[]) {
   return [...sections].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 }
 
-export default function SectionsManager({ classId }: { classId: string }) {
+export default function SectionsManager({ classId, yearId }: { classId: string; yearId?: string }) {
   const [sections, setSections] = useState<Section[] | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -135,6 +136,11 @@ export default function SectionsManager({ classId }: { classId: string }) {
                       <p className="text-sm text-muted-foreground">Capacity {section.capacity}</p>
                     </div>
                     <div className="flex gap-2">
+                      {yearId && (
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={`/dashboard/students?year=${yearId}&class=${classId}&section=${id}`}>Students</Link>
+                        </Button>
+                      )}
                       <Button variant="outline" size="icon-sm" disabled={busy} onClick={() => startEdit(section)} aria-label={`Edit section ${section.name}`}>
                         <Pencil />
                       </Button>

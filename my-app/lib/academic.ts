@@ -12,6 +12,8 @@ import type {
   Subject,
   SubjectPayload,
   SubjectUpdatePayload,
+  TeacherAssignment,
+  TeacherAssignmentPayload,
 } from "./types/academic";
 
 // ── Academic years ──
@@ -96,4 +98,22 @@ export async function updateSubject(subjectId: string, payload: SubjectUpdatePay
 
 export async function deleteSubject(subjectId: string) {
   return apiRequest(`/academic/subjects/${subjectId}`, { method: "DELETE" });
+}
+
+// ── Teacher assignments ──
+
+export function assignTeacher(payload: TeacherAssignmentPayload) {
+  return apiRequest("/academic/teacher-assignments", { method: "POST", body: payload });
+}
+
+export async function listAssignmentsBySection(classId: string, sectionId: string) {
+  return unwrap<TeacherAssignment[]>(await apiRequest(`/academic/teacher-assignments/section/${classId}/${sectionId}`)) ?? [];
+}
+
+export async function listAssignmentsByTeacher(teacherUserId: string) {
+  return unwrap<TeacherAssignment[]>(await apiRequest(`/academic/teacher-assignments/teacher/${teacherUserId}`)) ?? [];
+}
+
+export function removeTeacherAssignment(mappingId: string) {
+  return apiRequest(`/academic/teacher-assignments/${mappingId}`, { method: "DELETE" });
 }

@@ -40,6 +40,23 @@ export type SectionPayload = {
   capacity: number;
 };
 
+// ── Teacher assignments ──
+
+export type TeacherAssignmentPayload = {
+  class_id: string;
+  section_id: string;
+  /** The teacher's login user ID (not the staff record ID). */
+  teacher_user_id: string;
+  /** Empty means class teacher for the section. */
+  subject_id?: string | null;
+  academic_year_id: string;
+};
+
+export type TeacherAssignment = TeacherAssignmentPayload & {
+  _id?: string;
+  id?: string;
+};
+
 // ── Subjects ──
 
 export type SubjectPayload = {

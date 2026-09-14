@@ -4,7 +4,9 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Alert, PageHeader } from "@/components/form";
+import { Loading } from "@/components/data-display";
 import SectionsManager from "@/components/classes/sections-manager";
+import TeacherAssignments from "@/components/classes/teacher-assignments";
 import { getClass } from "@/lib/academic";
 import type { SchoolClass } from "@/lib/types/academic";
 import { getErrorMessage } from "@/lib/utils";
@@ -21,10 +23,10 @@ export default function ClassDetailPage({ params }: { params: Promise<{ id: stri
   }, [id]);
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-5xl">
       <PageHeader
         title={cls?.name ?? "Class"}
-        description="Manage the sections of this class"
+        description="Sections and teachers of this class"
         backHref={cls ? `/dashboard/classes?year=${cls.academic_year_id}` : "/dashboard/classes"}
         action={
           cls && (
@@ -34,7 +36,17 @@ export default function ClassDetailPage({ params }: { params: Promise<{ id: stri
           )
         }
       />
-      {error ? <Alert type="error">{error}</Alert> : <SectionsManager classId={id} />}
+      {error && <Alert type="error">{error}</Alert>}
+      {!cls && !error && <Loading />}
+      {cls && (
+        <div className="grid items-start gap-6 lg:grid-cols-2">
+          <section className="space-y-3">
+            <h2 className="font-semibold">Sections</h2>
+            <SectionsManager classId={id} yearId={cls.academic_year_id} />
+          </section>
+          <TeacherAssignments classId={id} yearId={cls.academic_year_id} />
+        </div>
+      )}
     </div>
   );
 }
