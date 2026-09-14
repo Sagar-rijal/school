@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
+import { clearSession } from "@/lib/server/backend";
 
-const AUTH_COOKIES = ["access-token", "refresh-token"];
-
+// The backend has no logout endpoint, so logging out means clearing our session cookies.
 export async function POST() {
   const response = NextResponse.json({ message: "Logged out" });
-  for (const name of AUTH_COOKIES) {
-    response.cookies.delete(name);
-  }
+  clearSession(response);
   return response;
 }

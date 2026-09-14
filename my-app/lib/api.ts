@@ -1,3 +1,6 @@
+import { LOGIN_ROUTE } from "./auth-constants";
+import { useAuthStore } from "@/store/useAuthStore";
+
 const BASE_URL = "/api/v1/school-backend";
 
 type QueryValue = string | number | boolean | null | undefined;
@@ -53,11 +56,24 @@ function extractErrorMessage(data: unknown): string {
   return "Something went wrong";
 }
 
-export async function apiRequest<T = unknown>(
-  endpoint: string,
-  options: RequestOptions = {}
+/** Session is gone (refresh already failed server-side) — send the user to login. */
+function redirectToLogin() {
+  if (typeof window === "undefined" || window.location.pathname === LOGIN_ROUTE) return;
+  useAuthStore.getState().clearAuthUser();
+  const next = window.location.pathname + window.location.search;
+  window.location.assign(`${LOGIN_ROUTE}?next=${encodeURIComponent(next)}`);
+}
+
+export function apiRequest<T = unknown>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+  return request<T>(`${BASE_URL}${endpoint}`, options);
+}
+
+/** Low-level request to any same-site URL. Prefer `apiRequest` for backend endpoints. */
+export async function request<T = unknown>(
+  path: string,
+  options: RequestOptions & { redirectOnUnauthorized?: boolean } = {}
 ): Promise<T> {
-  const url = `${BASE_URL}${endpoint}${buildQuery(options.query)}`;
+  const url = `${path}${buildQuery(options.query)}`;
 
   const response = await fetch(url, {
     method: options.method || "GET",
@@ -77,6 +93,11 @@ export async function apiRequest<T = unknown>(
     } catch {
       data = text;
     }
+  }
+
+  if (response.status === 401 && options.redirectOnUnauthorized !== false) {
+    redirectToLogin();
+    throw new ApiError("Your session has expired. Please sign in again.", 401);
   }
 
   if (!response.ok) {

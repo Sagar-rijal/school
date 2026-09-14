@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { loginUser } from "@/lib/auth";
 import { useAuthStore } from "@/store/useAuthStore";
 
-export default function LoginPage() {
+export default function SignInForm({ redirectTo = "/dashboard" }: { redirectTo?: string }) {
   const router = useRouter();
   const setAuthUser = useAuthStore((s) => s.setAuthUser);
 
@@ -32,7 +32,7 @@ export default function LoginPage() {
 
   const isFormValid = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(data.email) && data.password.length >= 6;
+    return emailRegex.test(data.email) && data.password.length > 0;
   };
 
   const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
@@ -42,10 +42,10 @@ export default function LoginPage() {
     try {
       setLoading(true);
       const email = data.email.trim();
-      await loginUser({ email, password: data.password });
+      const { user } = await loginUser({ email, password: data.password });
 
-      setAuthUser({ email });
-      router.push("/dashboard");
+      setAuthUser({ email: user?.email ?? email, id: user?.id, name: user?.name });
+      router.replace(redirectTo);
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -121,7 +121,6 @@ export default function LoginPage() {
               autoComplete="current-password"
               placeholder="••••••••"
               required
-              minLength={6}
               className="h-12 w-full bg-zinc-50/50 px-4 text-base transition-colors placeholder:text-zinc-400 focus:bg-white sm:h-11 sm:text-sm"
               value={data.password}
               onChange={handleChange}

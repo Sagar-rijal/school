@@ -1,59 +1,79 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  BACKEND_PREFIX,
+  applySession,
+  authHeaders,
+  backendUrl,
+  clearSession,
+  hasSession,
+  refreshSession,
+  sanitizeSetCookie,
+} from "@/lib/server/backend";
 
-const PREFIX = "/api/v1/school-backend";
-
+/**
+ * Forwards /api/v1/school-backend/* to the backend with the session attached.
+ * If the backend says 401, the session is refreshed once and the request retried.
+ */
 async function proxy(req: NextRequest) {
-  const backendUrl = process.env.BACKEND_URL;
-  if (!backendUrl) {
-    return NextResponse.json({ message: "BACKEND_URL is not configured" }, { status: 500 });
-  }
-
-  let path = req.nextUrl.pathname.replace(PREFIX, "");
+  let path = req.nextUrl.pathname.replace(BACKEND_PREFIX, "");
   // The backend defines GET /tenant/ with a trailing slash
   if (path === "/tenant") path = "/tenant/";
 
-  // Keep the query string so filters like ?class_id= reach the backend
-  const url = `${backendUrl}${PREFIX}${path}${req.nextUrl.search}`;
-
-  const headers: Record<string, string> = {};
-  const contentType = req.headers.get("content-type");
-  const cookie = req.headers.get("cookie");
-  const authorization = req.headers.get("authorization");
-  if (contentType) headers["Content-Type"] = contentType;
-  if (cookie) headers["Cookie"] = cookie;
-  if (authorization) headers["Authorization"] = authorization;
-
-  const init: RequestInit = { method: req.method, headers };
-  if (req.method !== "GET" && req.method !== "HEAD") {
-    init.body = await req.text();
+  let url: string;
+  try {
+    url = backendUrl(path) + req.nextUrl.search;
+  } catch (err) {
+    return NextResponse.json({ message: String((err as Error).message) }, { status: 500 });
   }
 
-  try {
-    const res = await fetch(url, init);
-    const body = await res.text();
+  const body = req.method !== "GET" && req.method !== "HEAD" ? await req.text() : undefined;
+  const contentType = req.headers.get("content-type");
 
-    if (process.env.NODE_ENV === "development") {
-      console.log(`[proxy] ${req.method} ${path}${req.nextUrl.search} → ${res.status}`);
-    }
-
-    const response = new NextResponse(body || null, {
-      status: res.status,
+  const send = (accessToken?: string) =>
+    fetch(url, {
+      method: req.method,
       headers: {
-        "Content-Type": res.headers.get("content-type") ?? "application/json",
+        ...authHeaders(req, accessToken),
+        ...(contentType ? { "Content-Type": contentType } : {}),
       },
+      body,
     });
 
-    for (const value of res.headers.getSetCookie()) {
-      response.headers.append("Set-Cookie", value);
+  try {
+    let res = await send();
+    let refreshed: Awaited<ReturnType<typeof refreshSession>> = null;
+
+    if (res.status === 401 && hasSession(req)) {
+      refreshed = await refreshSession(req);
+      if (refreshed) res = await send(refreshed.accessToken);
+    }
+
+    const text = await res.text();
+
+    if (process.env.NODE_ENV === "development") {
+      const note = refreshed ? " (after token refresh)" : "";
+      console.log(`[proxy] ${req.method} ${path}${req.nextUrl.search} → ${res.status}${note}`);
+    }
+
+    const response = new NextResponse(text || null, {
+      status: res.status,
+      headers: { "Content-Type": res.headers.get("content-type") ?? "application/json" },
+    });
+
+    if (res.status === 401) {
+      // Refresh failed or wasn't possible — end the session so the app sends the user to login
+      clearSession(response);
+    } else {
+      if (refreshed) applySession(response, refreshed.setCookies, refreshed.body);
+      for (const cookie of res.headers.getSetCookie()) {
+        response.headers.append("Set-Cookie", sanitizeSetCookie(cookie));
+      }
     }
 
     return response;
   } catch (err) {
     console.error("[proxy] error:", err);
-    return NextResponse.json(
-      { message: "Could not reach the backend server" },
-      { status: 502 }
-    );
+    return NextResponse.json({ message: "Could not reach the backend server" }, { status: 502 });
   }
 }
 

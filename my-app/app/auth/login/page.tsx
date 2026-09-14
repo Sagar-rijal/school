@@ -1,6 +1,7 @@
-// app/login/page.tsx
-import SignInForm from "@/components/signin-form1"
+import SignInForm from "@/components/signin-form1";
+import { safeRedirectPath } from "@/lib/auth-constants";
 
-export default function LoginPage() {
-  return <SignInForm />
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+  const { next } = await searchParams;
+  return <SignInForm redirectTo={safeRedirectPath(next)} />;
 }

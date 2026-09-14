@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 
 export interface AuthUser {
   email: string;
+  id?: string;
   name?: string;
 }
 
@@ -13,7 +14,7 @@ interface AuthState {
 }
 
 // Persisted so the sidebar still knows who is signed in after a refresh.
-// The access-token cookie remains the source of truth for authentication.
+// The session cookies remain the source of truth for authentication.
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
