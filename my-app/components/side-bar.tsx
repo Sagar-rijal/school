@@ -14,6 +14,7 @@ import {
   UserPlus,
   CalendarCheck,
   IndianRupee,
+  ClipboardList,
   UserCircle,
   LogOut,
   Menu,
@@ -37,9 +38,10 @@ const groups: { title: string; links: NavLink[] }[] = [
     ],
   },
   {
-    title: "Daily",
+    title: "Academics",
     links: [
       { href: "/dashboard/attendance", label: "Attendance", icon: CalendarCheck },
+      { href: "/dashboard/exams", label: "Exams", icon: ClipboardList },
     ],
   },
   {
@@ -190,12 +192,12 @@ export default function Sidebar() {
   return (
     <>
       {/* ── DESKTOP SIDEBAR (unchanged) ── */}
-      <aside className="hidden md:flex w-64 h-screen border-r bg-background p-4 flex-col shrink-0">
+      <aside className="hidden md:flex print:hidden w-64 h-screen border-r bg-background p-4 flex-col shrink-0">
         <SidebarContent />
       </aside>
 
       {/* ── MOBILE TOPBAR ── */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center gap-3 px-4 py-3 bg-background border-b">
+      <div className="md:hidden print:hidden fixed top-0 left-0 right-0 z-40 flex items-center gap-3 px-4 py-3 bg-background border-b">
         <button
           onClick={() => setMobileOpen(true)}
           aria-label="Open menu"
