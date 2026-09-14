@@ -1,35 +1,63 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useState, useRef, useEffect } from "react"
 import {
-  LayoutDashboard,
-  Users,
-  UserRound,
   School,
+  CalendarRange,
+  Layers,
+  BookOpen,
+  BriefcaseBusiness,
+  GraduationCap,
+  Users,
+  UserPlus,
+  CalendarCheck,
   IndianRupee,
-  CalendarCheck2,
-  FileBarChart2,
   UserCircle,
   LogOut,
   Menu,
   X,
+  type LucideIcon,
 } from "lucide-react"
+import { logoutUser } from "@/lib/auth"
+import { useAuthStore } from "@/store/useAuthStore"
 
-const links = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/students", label: "Students", icon: Users },
-  { href: "/dashboard/teachers", label: "Teachers", icon: UserRound },
-  { href: "/dashboard/classes", label: "Classes", icon: School },
-  { href: "/dashboard/register-user", label: "Register-user", icon: IndianRupee },
-  { href: "/dashboard/update-school", label: "Update-school", icon: CalendarCheck2 },
-  { href: "/dashboard/register", label: "Add school", icon: FileBarChart2 },
+type NavLink = { href: string; label: string; icon: LucideIcon }
+
+// Add a link here as each feature's pages are built
+const groups: { title: string; links: NavLink[] }[] = [
+  {
+    title: "Setup",
+    links: [
+      { href: "/dashboard/schools", label: "Schools", icon: School },
+      { href: "/dashboard/academic-years", label: "Academic years", icon: CalendarRange },
+      { href: "/dashboard/classes", label: "Classes", icon: Layers },
+      { href: "/dashboard/subjects", label: "Subjects", icon: BookOpen },
+    ],
+  },
+  {
+    title: "Daily",
+    links: [
+      { href: "/dashboard/attendance", label: "Attendance", icon: CalendarCheck },
+    ],
+  },
+  {
+    title: "Finance",
+    links: [
+      { href: "/dashboard/fees", label: "Fees", icon: IndianRupee },
+    ],
+  },
+  {
+    title: "People",
+    links: [
+      { href: "/dashboard/students", label: "Students", icon: GraduationCap },
+      { href: "/dashboard/parents", label: "Parents", icon: Users },
+      { href: "/dashboard/staff", label: "Staff", icon: BriefcaseBusiness },
+      { href: "/dashboard/users", label: "Users & roles", icon: UserPlus },
+    ],
+  },
 ]
-
-const user = {
-  email: "user@example.com",
-}
 
 function SidebarContent({
   onNavigate,
@@ -37,8 +65,17 @@ function SidebarContent({
   onNavigate?: () => void
 }) {
   const pathname = usePathname()
+  const router = useRouter()
+  const user = useAuthStore((s) => s.user)
+  const clearAuthUser = useAuthStore((s) => s.clearAuthUser)
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  const handleLogout = async () => {
+    await logoutUser()
+    clearAuthUser()
+    router.replace("/auth/login")
+  }
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -67,29 +104,34 @@ function SidebarContent({
       </div>
 
       {/* Nav Links */}
-      <nav className="flex-1 space-y-1">
-        {links.map((link) => {
-          const Icon = link.icon
-          const isActive = pathname === link.href
+      <nav className="-mx-1 min-h-0 flex-1 space-y-4 overflow-y-auto px-1">
+        {groups.map((group) => (
+          <div key={group.title} className="space-y-1">
+            <p className="px-3 text-xs font-medium uppercase tracking-wide text-muted-foreground/70">{group.title}</p>
+            {group.links.map((link) => {
+              const Icon = link.icon
+              const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`)
 
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={onNavigate}
-              className={`
-                flex items-center gap-3 px-3 py-2 rounded-md text-md font-medium transition-colors
-                ${isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                }
-              `}
-            >
-              <Icon className="w-5 h-5" />
-              {link.label}
-            </Link>
-          )
-        })}
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={onNavigate}
+                  className={`
+                    flex items-center gap-3 px-3 py-1.5 rounded-md text-sm font-medium transition-colors
+                    ${isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    }
+                  `}
+                >
+                  <Icon className="w-4 h-4" />
+                  {link.label}
+                </Link>
+              )
+            })}
+          </div>
+        ))}
       </nav>
 
       {/* Bottom Profile */}
@@ -108,11 +150,11 @@ function SidebarContent({
             <div className="p-4 space-y-3">
               <div className="text-sm">
                 <p className="text-muted-foreground">Signed in as</p>
-                <p className="font-medium break-all">{user.email}</p>
+                <p className="font-medium break-all">{user?.email ?? "Unknown user"}</p>
               </div>
               <div className="border-t pt-3">
                 <button
-                  onClick={() => console.log("logout")}
+                  onClick={handleLogout}
                   className="flex items-center gap-2 text-sm text-red-600 hover:bg-red-50 w-full px-2 py-2 rounded-md"
                 >
                   <LogOut className="w-4 h-4" />

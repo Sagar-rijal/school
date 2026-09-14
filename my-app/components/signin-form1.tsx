@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import type { FormEvent, ChangeEvent } from "react";
+import type { SubmitEvent, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { loginUser } from "@/lib/auth";
+import { useAuthStore } from "@/store/useAuthStore";
 
-export default function LoginPage() {
+export default function SignInForm({ redirectTo = "/dashboard" }: { redirectTo?: string }) {
   const router = useRouter();
+  const setAuthUser = useAuthStore((s) => s.setAuthUser);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -30,23 +32,20 @@ export default function LoginPage() {
 
   const isFormValid = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(data.email) && data.password.length >= 6;
+    return emailRegex.test(data.email) && data.password.length > 0;
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
 
     try {
       setLoading(true);
-      const res = await loginUser({
-        email: data.email.trim(),
-        password: data.password,
-      });
+      const email = data.email.trim();
+      const { user } = await loginUser({ email, password: data.password });
 
-      console.log("Login success:", res);
-      localStorage.setItem("isLoggedIn", "true");
-      router.push("/dashboard");
+      setAuthUser({ email: user?.email ?? email, id: user?.id, name: user?.name });
+      router.replace(redirectTo);
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -109,7 +108,7 @@ export default function LoginPage() {
                 Password
               </Label>
               <Link
-                href="/auth/forgetPass"
+                href="/auth/forgot-password"
                 className="text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-950 hover:underline"
               >
                 Forgot password?
@@ -122,7 +121,6 @@ export default function LoginPage() {
               autoComplete="current-password"
               placeholder="••••••••"
               required
-              minLength={6}
               className="h-12 w-full bg-zinc-50/50 px-4 text-base transition-colors placeholder:text-zinc-400 focus:bg-white sm:h-11 sm:text-sm"
               value={data.password}
               onChange={handleChange}
