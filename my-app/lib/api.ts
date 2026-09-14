@@ -111,7 +111,7 @@ export async function request<T = unknown>(
  * The OpenAPI spec doesn't document response bodies. Existing endpoints wrap
  * results in `{ data }`, so use that when present and fall back to the raw body.
  */
-export function unwrap<T>(res: ApiResponse<T> | T): T {
+export function unwrap<T>(res: unknown): T {
   if (res && typeof res === "object" && "data" in res) {
     return (res as ApiResponse<T>).data;
   }

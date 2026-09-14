@@ -12,6 +12,7 @@ import {
   GraduationCap,
   Users,
   UserPlus,
+  CalendarCheck,
   UserCircle,
   LogOut,
   Menu,
@@ -32,6 +33,12 @@ const groups: { title: string; links: NavLink[] }[] = [
       { href: "/dashboard/academic-years", label: "Academic years", icon: CalendarRange },
       { href: "/dashboard/classes", label: "Classes", icon: Layers },
       { href: "/dashboard/subjects", label: "Subjects", icon: BookOpen },
+    ],
+  },
+  {
+    title: "Daily",
+    links: [
+      { href: "/dashboard/attendance", label: "Attendance", icon: CalendarCheck },
     ],
   },
   {

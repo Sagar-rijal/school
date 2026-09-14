@@ -87,6 +87,28 @@ export function Card({ title, action, children, className }: { title?: string; a
   );
 }
 
+/**
+ * Shows the numeric fields of a report object as tiles. Report endpoints don't document
+ * their response, so this adapts to whatever counts/percentages come back.
+ */
+export function NumberStats({ data, format }: { data: unknown; format?: (key: string, value: number) => React.ReactNode }) {
+  const source = data && typeof data === "object" && !Array.isArray(data) ? (data as Record<string, unknown>) : {};
+  const entries = Object.entries(source).filter((entry): entry is [string, number] => typeof entry[1] === "number");
+  if (entries.length === 0) return <p className="text-sm text-muted-foreground">No summary available.</p>;
+
+  return (
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+      {entries.map(([key, value]) => (
+        <StatTile
+          key={key}
+          label={formatEnum(key)}
+          value={format ? format(key, value) : /percent/i.test(key) ? `${Math.round(value * 10) / 10}%` : value}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function StatTile({ label, value, tone }: { label: string; value: React.ReactNode; tone?: "red" | "green" }) {
   return (
     <div className="rounded-lg border bg-white p-3">

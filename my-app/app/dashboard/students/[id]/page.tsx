@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Alert, PageHeader } from "@/components/form";
 import { Card, DetailList, Loading, StatusBadge } from "@/components/data-display";
+import AttendanceCard from "@/components/students/attendance-card";
 import EnrollmentsPanel from "@/components/students/enrollments-panel";
 import ParentsPanel from "@/components/students/parents-panel";
 import { useQuery } from "@/hooks/use-query";
@@ -83,6 +84,8 @@ export default function StudentProfilePage({
             <EnrollmentsPanel studentId={id} />
             <ParentsPanel studentId={id} />
           </div>
+
+          <AttendanceCard studentId={id} />
 
           <div className="flex justify-end">
             <Button variant="outline" onClick={handleDelete} className="text-red-600 hover:text-red-700">
