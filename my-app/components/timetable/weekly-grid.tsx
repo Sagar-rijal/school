@@ -65,7 +65,7 @@ export default function WeeklyGrid({ periods, entries, renderEntry, onSlotClick 
                           {content}
                         </button>
                       ) : (
-                        <div className={cn("min-h-14 rounded-md px-2 py-1.5", entry && "bg-primary/5")}>{entry && content}</div>
+                        <div className={cn("flex min-h-14 flex-col items-start rounded-md px-2 py-1.5", entry && "bg-primary/5")}>{entry && content}</div>
                       )}
                     </td>
                   );

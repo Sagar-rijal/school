@@ -16,6 +16,12 @@ If something fails, the fix is usually in one of these files:
 | Records use `_id` (or `id`) | `lib/api.ts` → `getId`, `findCreatedId` |
 | Token field names / cookie names | `lib/server/backend.ts`, `lib/auth-constants.ts` |
 | Roles response format | `lib/roles.ts` → `normalizeRoles` |
+| Class roster format (enrollments or students) | `lib/students.ts` → `getRoster` |
+| Invoice amount fields (`total_amount`, `paid_amount`, `balance_due`) | `lib/fees.ts` → `invoiceAmounts` |
+| Report card fields (percentage, grade, rank, subjects) | `lib/exams.ts` → `reportCardSummary`, `reportCardSubjects` |
+| Exam result pass/fail field | `lib/exams.ts` → `resultPassed` |
+| Weekly timetable format (flat / by day / grouped) | `lib/timetable.ts` → `normalizeWeekly` |
+| Report endpoints (attendance/fee summaries) | shown generically by `NumberStats` — any numeric fields appear |
 
 ## 1. Login & session
 
@@ -67,3 +73,58 @@ If something fails, the fix is usually in one of these files:
 - [ ] Filter "Taught in Class X" shows only subjects linked to that class
 - [ ] Edit subject → linked classes are pre-ticked; unticking saves
 - [ ] Code is saved in uppercase
+
+## 7. Staff & departments
+
+- [ ] Add a department, then a teaching staff member in it with subjects and a qualification
+- [ ] Staff list filters (department, type, status) narrow the list
+- [ ] Edit staff → employee ID, staff type and joining date are locked; status saves
+- [ ] Put a real login **User ID** on a teacher — needed for teacher assignments
+
+## 8. Students, parents & enrollment
+
+- [ ] Add student with "Enroll in a class" filled → lands on the new student's profile, enrolled
+      (if it lands on the list instead, the create response has no ID — update `findCreatedId`)
+- [ ] Students list with class + section selected shows **roll numbers**
+- [ ] Profile: edit an enrollment (roll number, section, status)
+- [ ] Profile: add a new parent (auto-linked), link an existing parent, unlink
+- [ ] Delete a test student
+
+## 9. Teacher assignments
+
+- [ ] Class page → Teachers card lists teachers that have a User ID
+- [ ] Assign as class teacher and for a subject; remove one
+- [ ] Staff profile → Class assignments shows the same
+
+## 10. Attendance
+
+- [ ] Pick class/section/date → roster appears; "All present", change one to Absent, add a remark, save
+- [ ] Reload the page → saved marks come back (tests `GET /attendance/class/...` with the date)
+- [ ] Per-period attendance with a period number saves separately from daily
+- [ ] Student profile → Attendance card shows summary numbers and the absent day
+
+## 11. Fees
+
+- [ ] Create categories, then a fee structure for a class → total matches
+- [ ] Generate one invoice from a student profile (+ Invoice)
+- [ ] Generate for a whole section → created count; running it again skips everyone
+- [ ] Invoice page: amounts correct; record a partial payment → paid/balance/status update
+- [ ] Try paying more than the balance → blocked (and backend rejects duplicate receipt numbers)
+- [ ] Collections for today lists the payment with totals by mode
+- [ ] Student profile → Fees card summary shows money values
+
+## 12. Exams
+
+- [ ] Schedule an exam for a class section (subject list shows subjects linked to that class)
+- [ ] Marks: enter marks, mark one absent, save → grade/percentage/pass appear after reload
+- [ ] Exam for "All sections" lists students from every section
+- [ ] Report cards: Generate → ranked list; View → printable card with subject rows; Publish
+- [ ] Student profile → Exam results lists the marks and report card links
+
+## 13. Timetable
+
+- [ ] Periods: add Period 1–N and a break
+- [ ] Class timetable: set a slot (subject, teacher, room) → appears in the grid
+- [ ] Put the same teacher in the same period for another section → backend clash error is shown
+- [ ] Copy Monday to other weekdays; clear a slot; clear timetable
+- [ ] Teacher schedule shows the teacher's classes (also via Staff profile → Weekly schedule)
