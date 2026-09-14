@@ -118,6 +118,20 @@ export function unwrap<T>(res: ApiResponse<T> | T): T {
   return res as T;
 }
 
+/** Finds the new record's id in a create response (`{ data: { _id } }`, `{ id }`, `{ inserted_id }`...). */
+export function findCreatedId(res: unknown): string | undefined {
+  const keys = ["_id", "id", "user_id", "inserted_id"];
+  const containers = [unwrap(res), res];
+  for (const c of containers) {
+    if (typeof c === "string" && c) return c;
+    if (!c || typeof c !== "object") continue;
+    for (const key of keys) {
+      const value = (c as Record<string, unknown>)[key];
+      if (typeof value === "string" && value) return value;
+    }
+  }
+}
+
 /** Backend documents may use `_id` or `id`. */
 export function getId(doc: { _id?: string; id?: string }): string {
   return doc._id ?? doc.id ?? "";

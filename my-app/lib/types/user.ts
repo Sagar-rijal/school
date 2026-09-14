@@ -35,3 +35,20 @@ export const ROLE_NAMES = [
 ] as const;
 
 export type RoleName = (typeof ROLE_NAMES)[number];
+
+/** Platform-wide roles are assigned without a school. */
+export const PLATFORM_ROLES: readonly RoleName[] = ["SUPER_ADMIN"];
+
+export type RoleAssignment = {
+  user_id: string;
+  role: RoleName;
+  /** Required for school-scoped roles, null for platform roles. */
+  school_id?: string | null;
+};
+
+/** One role held by a user, normalised from the (undocumented) GET /roles/{user_id} response. */
+export type UserRole = {
+  role: string;
+  school_id: string | null;
+  permissions: string[];
+};

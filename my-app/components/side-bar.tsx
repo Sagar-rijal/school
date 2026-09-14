@@ -21,7 +21,7 @@ const links = [
   { href: "/dashboard/schools", label: "Schools", icon: School },
   { href: "/dashboard/academic-years", label: "Academic years", icon: CalendarRange },
   { href: "/dashboard/classes", label: "Classes", icon: Layers },
-  { href: "/dashboard/users/new", label: "Create user", icon: UserPlus },
+  { href: "/dashboard/users", label: "Users & roles", icon: UserPlus },
 ]
 
 function SidebarContent({

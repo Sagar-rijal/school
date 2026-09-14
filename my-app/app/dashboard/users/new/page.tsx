@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { ChangeEvent, SubmitEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +39,7 @@ export default function CreateUserPage() {
   const [personal, setPersonal] = useState<UserPersonalInfo>(EMPTY_PERSONAL);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [created, setCreated] = useState<{ email: string; userId?: string } | null>(null);
 
   // The backend accepts userPersonalInfo as optional, but if sent, every field is required.
   const hasPersonalInfo = Object.values(personal).some((v) => v.trim() !== "");
@@ -52,7 +53,7 @@ export default function CreateUserPage() {
   const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
+    setCreated(null);
 
     const payload: CreateUserPayload = {
       name: basic.name.trim(),
@@ -64,8 +65,8 @@ export default function CreateUserPage() {
 
     setLoading(true);
     try {
-      await createUser(payload);
-      setSuccess(`User ${payload.email} created successfully.`);
+      const { userId } = await createUser(payload);
+      setCreated({ email: payload.email, userId });
       setBasic(EMPTY_BASIC);
       setPersonal(EMPTY_PERSONAL);
     } catch (err) {
@@ -77,7 +78,11 @@ export default function CreateUserPage() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <PageHeader title="Create user" description="Add a login account for staff, parents or admins" />
+      <PageHeader
+        title="Create user"
+        description="Add a login account for staff, parents or admins"
+        backHref="/dashboard/users"
+      />
 
       <form onSubmit={handleSubmit} className="space-y-8 rounded-lg border bg-white p-4 shadow-sm sm:p-6">
         <FormSection title="Account">
@@ -130,7 +135,21 @@ export default function CreateUserPage() {
         </div>
 
         {error && <Alert type="error">{error}</Alert>}
-        {success && <Alert type="success">{success}</Alert>}
+        {created && (
+          <Alert type="success">
+            <p>User {created.email} created successfully.</p>
+            {created.userId ? (
+              <p className="mt-1">
+                User ID: <code className="font-mono">{created.userId}</code> ·{" "}
+                <Link href={`/dashboard/users/${created.userId}/roles`} className="font-medium underline">
+                  Assign roles
+                </Link>
+              </p>
+            ) : (
+              <p className="mt-1">Assign a role so they can use the system.</p>
+            )}
+          </Alert>
+        )}
 
         <div className="flex justify-end">
           <Button type="submit" disabled={loading}>
