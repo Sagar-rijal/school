@@ -25,6 +25,14 @@ export function formatDate(value?: string | null) {
   })
 }
 
+/** Sort by display_order, then name ("Class 2" before "Class 10"). */
+export function byDisplayOrder<T extends { display_order?: number; name: string }>(a: T, b: T) {
+  return (
+    (a.display_order ?? 0) - (b.display_order ?? 0) ||
+    a.name.localeCompare(b.name, undefined, { numeric: true })
+  )
+}
+
 export function getErrorMessage(err: unknown, fallback = "Something went wrong") {
   return err instanceof Error ? err.message : fallback
 }

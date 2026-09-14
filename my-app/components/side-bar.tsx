@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from "react"
 import {
   School,
   CalendarRange,
+  Layers,
   UserPlus,
   UserCircle,
   LogOut,
@@ -19,6 +20,7 @@ import { useAuthStore } from "@/store/useAuthStore"
 const links = [
   { href: "/dashboard/schools", label: "Schools", icon: School },
   { href: "/dashboard/academic-years", label: "Academic years", icon: CalendarRange },
+  { href: "/dashboard/classes", label: "Classes", icon: Layers },
   { href: "/dashboard/users/new", label: "Create user", icon: UserPlus },
 ]
 
