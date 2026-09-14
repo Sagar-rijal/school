@@ -8,6 +8,7 @@ import { Alert, PageHeader } from "@/components/form";
 import { Card, DetailList, Loading, StatusBadge } from "@/components/data-display";
 import AttendanceCard from "@/components/students/attendance-card";
 import EnrollmentsPanel from "@/components/students/enrollments-panel";
+import FeesCard from "@/components/students/fees-card";
 import ParentsPanel from "@/components/students/parents-panel";
 import { useQuery } from "@/hooks/use-query";
 import { deleteStudent, getStudent } from "@/lib/students";
@@ -85,7 +86,10 @@ export default function StudentProfilePage({
             <ParentsPanel studentId={id} />
           </div>
 
-          <AttendanceCard studentId={id} />
+          <div className="grid items-start gap-6 lg:grid-cols-2">
+            <AttendanceCard studentId={id} />
+            <FeesCard studentId={id} />
+          </div>
 
           <div className="flex justify-end">
             <Button variant="outline" onClick={handleDelete} className="text-red-600 hover:text-red-700">

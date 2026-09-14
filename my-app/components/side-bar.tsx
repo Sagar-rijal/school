@@ -13,6 +13,7 @@ import {
   Users,
   UserPlus,
   CalendarCheck,
+  IndianRupee,
   UserCircle,
   LogOut,
   Menu,
@@ -39,6 +40,12 @@ const groups: { title: string; links: NavLink[] }[] = [
     title: "Daily",
     links: [
       { href: "/dashboard/attendance", label: "Attendance", icon: CalendarCheck },
+    ],
+  },
+  {
+    title: "Finance",
+    links: [
+      { href: "/dashboard/fees", label: "Fees", icon: IndianRupee },
     ],
   },
   {
