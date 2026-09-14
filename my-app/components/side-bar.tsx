@@ -9,6 +9,8 @@ import {
   Layers,
   BookOpen,
   BriefcaseBusiness,
+  GraduationCap,
+  Users,
   UserPlus,
   UserCircle,
   LogOut,
@@ -35,6 +37,8 @@ const groups: { title: string; links: NavLink[] }[] = [
   {
     title: "People",
     links: [
+      { href: "/dashboard/students", label: "Students", icon: GraduationCap },
+      { href: "/dashboard/parents", label: "Parents", icon: Users },
       { href: "/dashboard/staff", label: "Staff", icon: BriefcaseBusiness },
       { href: "/dashboard/users", label: "Users & roles", icon: UserPlus },
     ],

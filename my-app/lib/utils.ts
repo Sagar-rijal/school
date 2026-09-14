@@ -52,6 +52,13 @@ export function toNumberOrNull(value: string) {
   return value.trim() === "" ? null : Number(value)
 }
 
+/** Copy of an object without some keys, e.g. fields an update endpoint doesn't accept. */
+export function omit<T extends object, K extends keyof T>(obj: T, ...keys: K[]): Omit<T, K> {
+  const copy = { ...obj }
+  for (const key of keys) delete copy[key]
+  return copy
+}
+
 /** Empty strings → null, for optional backend fields. */
 export function emptyToNull(value: string) {
   const trimmed = value.trim()
