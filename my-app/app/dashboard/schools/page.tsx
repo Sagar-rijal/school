@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
+import { Alert } from "@/components/form";
 import { getAllSchools } from "@/lib/school";
 import type { School } from "@/lib/types/school";
 import { getId } from "@/lib/api";
 
-export default function AllSchoolsPage() {
+export default function AllSchoolsPage({ searchParams }: { searchParams: Promise<{ created?: string }> }) {
+  const { created } = use(searchParams);
   const [schools, setSchools] = useState<School[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +56,12 @@ export default function AllSchoolsPage() {
           + Add School
         </Link>
       </div>
+
+      {created && (
+        <div className="mb-4">
+          <Alert type="success">School added successfully.</Alert>
+        </div>
+      )}
 
       {schools.length === 0 && (
         <p className="rounded-lg border border-dashed p-8 text-center text-gray-500">

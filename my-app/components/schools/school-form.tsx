@@ -192,11 +192,12 @@ export default function SchoolForm({ initialData, submitLabel, onSubmit, onSucce
         <Field label="Phone" htmlFor="phone" required hint="10 digits">
           {input("phone", { type: "tel", required: true, maxLength: 10 })}
         </Field>
-        <Field label="Website" htmlFor="website" required>
-          {input("website", { type: "url", required: true, placeholder: "https://..." })}
+        {/* Backend requires these keys but accepts empty strings, so they're optional here */}
+        <Field label="Website" htmlFor="website">
+          {input("website", { type: "url", placeholder: "https://..." })}
         </Field>
-        <Field label="Branding logo URL" htmlFor="brandingLogo" required>
-          {input("brandingLogo", { type: "url", required: true, placeholder: "https://..." })}
+        <Field label="Branding logo URL" htmlFor="brandingLogo" hint="Link to the school logo image">
+          {input("brandingLogo", { type: "url", placeholder: "https://..." })}
         </Field>
       </FormSection>
 
@@ -204,8 +205,8 @@ export default function SchoolForm({ initialData, submitLabel, onSubmit, onSucce
         <Field label="Address line 1" htmlFor="addressLine1" required>
           {input("addressLine1", { required: true })}
         </Field>
-        <Field label="Address line 2" htmlFor="addressLine2" required>
-          {input("addressLine2", { required: true })}
+        <Field label="Address line 2" htmlFor="addressLine2">
+          {input("addressLine2")}
         </Field>
         <Field label="City" htmlFor="city" required>
           {input("city", { required: true })}

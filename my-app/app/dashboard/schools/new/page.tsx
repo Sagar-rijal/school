@@ -14,7 +14,7 @@ export default function NewSchoolPage() {
       <SchoolForm
         submitLabel="Add school"
         onSubmit={addSchool}
-        onSuccess={() => router.push("/dashboard/schools")}
+        onSuccess={() => router.push("/dashboard/schools?created=1")}
       />
     </div>
   );
