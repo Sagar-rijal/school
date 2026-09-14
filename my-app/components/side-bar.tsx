@@ -1,35 +1,26 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useState, useRef, useEffect } from "react"
 import {
-  LayoutDashboard,
-  Users,
-  UserRound,
   School,
-  IndianRupee,
-  CalendarCheck2,
-  FileBarChart2,
+  CalendarRange,
+  UserPlus,
   UserCircle,
   LogOut,
   Menu,
   X,
 } from "lucide-react"
+import { logoutUser } from "@/lib/auth"
+import { useAuthStore } from "@/store/useAuthStore"
 
+// Add a link here as each feature's pages are built
 const links = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/students", label: "Students", icon: Users },
-  { href: "/dashboard/teachers", label: "Teachers", icon: UserRound },
-  { href: "/dashboard/classes", label: "Classes", icon: School },
-  { href: "/dashboard/register-user", label: "Register-user", icon: IndianRupee },
-  { href: "/dashboard/update-school", label: "Update-school", icon: CalendarCheck2 },
-  { href: "/dashboard/register", label: "Add school", icon: FileBarChart2 },
+  { href: "/dashboard/schools", label: "Schools", icon: School },
+  { href: "/dashboard/academic-years", label: "Academic years", icon: CalendarRange },
+  { href: "/dashboard/users/new", label: "Create user", icon: UserPlus },
 ]
-
-const user = {
-  email: "user@example.com",
-}
 
 function SidebarContent({
   onNavigate,
@@ -37,8 +28,17 @@ function SidebarContent({
   onNavigate?: () => void
 }) {
   const pathname = usePathname()
+  const router = useRouter()
+  const user = useAuthStore((s) => s.user)
+  const clearAuthUser = useAuthStore((s) => s.clearAuthUser)
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  const handleLogout = async () => {
+    await logoutUser()
+    clearAuthUser()
+    router.replace("/auth/login")
+  }
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -70,7 +70,7 @@ function SidebarContent({
       <nav className="flex-1 space-y-1">
         {links.map((link) => {
           const Icon = link.icon
-          const isActive = pathname === link.href
+          const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`)
 
           return (
             <Link
@@ -108,11 +108,11 @@ function SidebarContent({
             <div className="p-4 space-y-3">
               <div className="text-sm">
                 <p className="text-muted-foreground">Signed in as</p>
-                <p className="font-medium break-all">{user.email}</p>
+                <p className="font-medium break-all">{user?.email ?? "Unknown user"}</p>
               </div>
               <div className="border-t pt-3">
                 <button
-                  onClick={() => console.log("logout")}
+                  onClick={handleLogout}
                   className="flex items-center gap-2 text-sm text-red-600 hover:bg-red-50 w-full px-2 py-2 rounded-md"
                 >
                   <LogOut className="w-4 h-4" />

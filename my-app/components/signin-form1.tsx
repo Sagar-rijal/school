@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import type { FormEvent, ChangeEvent } from "react";
+import type { SubmitEvent, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { loginUser } from "@/lib/auth";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function LoginPage() {
   const router = useRouter();
+  const setAuthUser = useAuthStore((s) => s.setAuthUser);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -33,19 +35,16 @@ export default function LoginPage() {
     return emailRegex.test(data.email) && data.password.length >= 6;
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
 
     try {
       setLoading(true);
-      const res = await loginUser({
-        email: data.email.trim(),
-        password: data.password,
-      });
+      const email = data.email.trim();
+      await loginUser({ email, password: data.password });
 
-      console.log("Login success:", res);
-      localStorage.setItem("isLoggedIn", "true");
+      setAuthUser({ email });
       router.push("/dashboard");
     } catch (err) {
       if (err instanceof Error) {
@@ -109,7 +108,7 @@ export default function LoginPage() {
                 Password
               </Label>
               <Link
-                href="/auth/forgetPass"
+                href="/auth/forgot-password"
                 className="text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-950 hover:underline"
               >
                 Forgot password?

@@ -1,24 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND = "https://75p9bgvb-8081.inc1.devtunnels.ms/api/v1/school-backend";
+const PREFIX = "/api/v1/school-backend";
 
 async function proxy(req: NextRequest) {
-  
- let path = req.nextUrl.pathname.replace("/api/v1/school-backend", "");
- if (path.startsWith("/tenant") && !path.endsWith("/")) {
-    path = `${path}/`;
+  const backendUrl = process.env.BACKEND_URL;
+  if (!backendUrl) {
+    return NextResponse.json({ message: "BACKEND_URL is not configured" }, { status: 500 });
   }
-const url = `${BACKEND}${path}`;
 
-  console.log("→", req.method, url);
+  let path = req.nextUrl.pathname.replace(PREFIX, "");
+  // The backend defines GET /tenant/ with a trailing slash
+  if (path === "/tenant") path = "/tenant/";
 
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-    ...(req.headers.get("cookie") ? { Cookie: req.headers.get("cookie")! } : {}),
-  };
+  // Keep the query string so filters like ?class_id= reach the backend
+  const url = `${backendUrl}${PREFIX}${path}${req.nextUrl.search}`;
+
+  const headers: Record<string, string> = {};
+  const contentType = req.headers.get("content-type");
+  const cookie = req.headers.get("cookie");
+  const authorization = req.headers.get("authorization");
+  if (contentType) headers["Content-Type"] = contentType;
+  if (cookie) headers["Cookie"] = cookie;
+  if (authorization) headers["Authorization"] = authorization;
 
   const init: RequestInit = { method: req.method, headers };
-
   if (req.method !== "GET" && req.method !== "HEAD") {
     init.body = await req.text();
   }
@@ -27,29 +32,27 @@ const url = `${BACKEND}${path}`;
     const res = await fetch(url, init);
     const body = await res.text();
 
-    console.log("←", res.status, url);
-    console.log("← body:", body.slice(0, 200));
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[proxy] ${req.method} ${path}${req.nextUrl.search} → ${res.status}`);
+    }
 
-    const response = new NextResponse(body, {
+    const response = new NextResponse(body || null, {
       status: res.status,
       headers: {
         "Content-Type": res.headers.get("content-type") ?? "application/json",
       },
     });
 
-    res.headers.forEach((value, key) => {
-      if (key.toLowerCase() === "set-cookie") {
-        response.headers.append("Set-Cookie", value);
-      }
-    });
+    for (const value of res.headers.getSetCookie()) {
+      response.headers.append("Set-Cookie", value);
+    }
 
     return response;
-
   } catch (err) {
-    console.error("PROXY ERROR:", err);
+    console.error("[proxy] error:", err);
     return NextResponse.json(
-      { error: "Proxy failed", detail: String(err) },
-      { status: 500 }
+      { message: "Could not reach the backend server" },
+      { status: 502 }
     );
   }
 }
@@ -57,4 +60,5 @@ const url = `${BACKEND}${path}`;
 export const GET = proxy;
 export const POST = proxy;
 export const PUT = proxy;
+export const PATCH = proxy;
 export const DELETE = proxy;
