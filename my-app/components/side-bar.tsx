@@ -7,6 +7,7 @@ import {
   School,
   CalendarRange,
   Layers,
+  BookOpen,
   UserPlus,
   UserCircle,
   LogOut,
@@ -21,6 +22,7 @@ const links = [
   { href: "/dashboard/schools", label: "Schools", icon: School },
   { href: "/dashboard/academic-years", label: "Academic years", icon: CalendarRange },
   { href: "/dashboard/classes", label: "Classes", icon: Layers },
+  { href: "/dashboard/subjects", label: "Subjects", icon: BookOpen },
   { href: "/dashboard/users", label: "Users & roles", icon: UserPlus },
 ]
 

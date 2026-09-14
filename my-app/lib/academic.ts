@@ -9,6 +9,9 @@ import type {
   Section,
   SectionPayload,
   SectionUpdatePayload,
+  Subject,
+  SubjectPayload,
+  SubjectUpdatePayload,
 } from "./types/academic";
 
 // ── Academic years ──
@@ -71,4 +74,26 @@ export async function updateSection(sectionId: string, payload: SectionUpdatePay
 
 export async function deleteSection(sectionId: string) {
   return apiRequest(`/academic/sections/${sectionId}`, { method: "DELETE" });
+}
+
+// ── Subjects ──
+
+export async function listSubjects(filters: { class_id?: string } = {}) {
+  return unwrap<Subject[]>(await apiRequest("/academic/subjects", { query: filters }));
+}
+
+export async function getSubject(subjectId: string) {
+  return unwrap<Subject>(await apiRequest(`/academic/subjects/${subjectId}`));
+}
+
+export async function createSubject(payload: SubjectPayload) {
+  return apiRequest("/academic/subjects", { method: "POST", body: payload });
+}
+
+export async function updateSubject(subjectId: string, payload: SubjectUpdatePayload) {
+  return apiRequest(`/academic/subjects/${subjectId}`, { method: "PUT", body: payload });
+}
+
+export async function deleteSubject(subjectId: string) {
+  return apiRequest(`/academic/subjects/${subjectId}`, { method: "DELETE" });
 }

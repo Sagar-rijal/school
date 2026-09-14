@@ -40,6 +40,23 @@ export type SectionPayload = {
   capacity: number;
 };
 
+// ── Subjects ──
+
+export type SubjectPayload = {
+  name: string;
+  code: string;
+  description?: string | null;
+  /** Classes this subject is taught in. */
+  class_ids: string[];
+};
+
+export type SubjectUpdatePayload = Partial<SubjectPayload>;
+
+export type Subject = SubjectPayload & {
+  _id?: string;
+  id?: string;
+};
+
 /** A section can't be moved to another class. */
 export type SectionUpdatePayload = Partial<Pick<SectionPayload, "name" | "capacity">>;
 
