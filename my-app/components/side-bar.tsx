@@ -15,6 +15,7 @@ import {
   CalendarCheck,
   IndianRupee,
   ClipboardList,
+  Clock,
   UserCircle,
   LogOut,
   Menu,
@@ -41,6 +42,7 @@ const groups: { title: string; links: NavLink[] }[] = [
     title: "Academics",
     links: [
       { href: "/dashboard/attendance", label: "Attendance", icon: CalendarCheck },
+      { href: "/dashboard/timetable", label: "Timetable", icon: Clock },
       { href: "/dashboard/exams", label: "Exams", icon: ClipboardList },
     ],
   },
