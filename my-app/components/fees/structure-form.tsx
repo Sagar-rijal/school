@@ -80,7 +80,7 @@ export default function StructureForm({ years, categories, defaultYearId, initia
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 rounded-lg border bg-white p-4 shadow-sm sm:p-6">
+    <form onSubmit={handleSubmit} className="space-y-8 rounded-lg border bg-card p-4 sm:p-6">
       <FormSection title="Structure">
         <Field label="Academic year & class" htmlFor="picker-year" required hint={isEdit ? "Can't be changed after creation" : undefined} className="md:col-span-2">
           <fieldset disabled={isEdit}>

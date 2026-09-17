@@ -29,7 +29,7 @@ const STATUS_STYLES: Record<AttendanceStatus, { short: string; active: string }>
   ABSENT: { short: "A", active: "bg-red-600 text-white border-red-600" },
   LATE: { short: "L", active: "bg-amber-500 text-white border-amber-500" },
   EXCUSED: { short: "E", active: "bg-blue-600 text-white border-blue-600" },
-  HOLIDAY: { short: "H", active: "bg-gray-500 text-white border-gray-500" },
+  HOLIDAY: { short: "H", active: "bg-muted-foreground text-background border-muted-foreground" },
 };
 
 export default function AttendancePage({ searchParams }: { searchParams: Promise<Filters> }) {
@@ -244,7 +244,7 @@ export default function AttendancePage({ searchParams }: { searchParams: Promise
               {roster.map(({ studentId, student, rollNumber }) => {
                 const mark = marks[studentId];
                 return (
-                  <tr key={studentId} className={cn(!mark?.status && "bg-amber-50/60")}>
+                  <tr key={studentId} className={cn(!mark?.status && "bg-amber-50")}>
                     <TD className="font-mono">{rollNumber ?? "—"}</TD>
                     <TD className="font-medium">{studentLabel(student)}</TD>
                     <TD>
@@ -259,7 +259,7 @@ export default function AttendancePage({ searchParams }: { searchParams: Promise
                             onClick={() => setStatus(studentId, s)}
                             className={cn(
                               "size-8 rounded-md border text-xs font-semibold transition-colors",
-                              mark?.status === s ? STATUS_STYLES[s].active : "bg-white text-muted-foreground hover:bg-accent"
+                              mark?.status === s ? STATUS_STYLES[s].active : "text-muted-foreground hover:bg-accent"
                             )}
                           >
                             {STATUS_STYLES[s].short}

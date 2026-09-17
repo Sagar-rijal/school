@@ -84,7 +84,7 @@ export default function CreateUserPage() {
         backHref="/dashboard/users"
       />
 
-      <form onSubmit={handleSubmit} className="space-y-8 rounded-lg border bg-white p-4 shadow-sm sm:p-6">
+      <form onSubmit={handleSubmit} className="space-y-8 rounded-lg border bg-card p-4 sm:p-6">
         <FormSection title="Account">
           <Field label="Full name" htmlFor="name" required>
             <Input id="name" name="name" required value={basic.name} onChange={handleBasicChange} />

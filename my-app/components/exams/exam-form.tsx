@@ -94,7 +94,7 @@ export default function ExamForm({ years, defaultTarget, initialData, submitLabe
   const locked = isEdit ? "Can't be changed after scheduling" : undefined;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 rounded-lg border bg-white p-4 shadow-sm sm:p-6">
+    <form onSubmit={handleSubmit} className="space-y-8 rounded-lg border bg-card p-4 sm:p-6">
       <FormSection title="Exam">
         <Field label="Class & section" htmlFor="picker-year" required hint={locked ?? "Leave section empty for all sections"} className="md:col-span-2">
           <fieldset disabled={isEdit}>

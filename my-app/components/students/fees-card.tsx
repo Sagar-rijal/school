@@ -44,7 +44,7 @@ export default function FeesCard({ studentId }: { studentId: string }) {
             {[...invoices.data!].sort((a, b) => (b.due_date ?? "").localeCompare(a.due_date ?? "")).map((inv) => (
               <li key={getId(inv)} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
                 <div>
-                  <Link href={`/dashboard/fees/invoices/${getId(inv)}`} className="font-mono text-xs font-medium hover:underline">{inv.invoice_number}</Link>
+                  <Link href={`/dashboard/fees/invoices/${getId(inv)}`} className="font-mono text-xs font-medium text-link hover:underline">{inv.invoice_number}</Link>
                   <p className="text-xs text-muted-foreground">Due {formatDate(inv.due_date)}</p>
                 </div>
                 <div className="flex items-center gap-2">

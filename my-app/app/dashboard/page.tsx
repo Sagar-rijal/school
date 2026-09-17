@@ -111,7 +111,7 @@ export default function DashboardOverviewPage() {
             <ul className="divide-y rounded-md border text-sm">
               {upcoming.map((exam) => (
                 <li key={getId(exam)} className="flex items-center justify-between gap-2 px-3 py-2">
-                  <Link href={`/dashboard/exams/schedules/${getId(exam)}/marks`} className="font-medium hover:underline">
+                  <Link href={`/dashboard/exams/schedules/${getId(exam)}/marks`} className="font-medium text-link hover:underline">
                     {exam.name}
                   </Link>
                   <span className="text-muted-foreground">
@@ -136,7 +136,7 @@ export default function DashboardOverviewPage() {
           ) : (invoices.data ?? []).length === 0 ? (
             <EmptyState>No invoices generated yet.</EmptyState>
           ) : (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               <StatTile label="Invoices" value={(invoices.data ?? []).length} />
               <StatTile label="Collected" value={formatCurrency(fees.collected)} tone="green" />
               <StatTile label="Unpaid invoices" value={fees.unpaid} tone={fees.unpaid > 0 ? "red" : undefined} />

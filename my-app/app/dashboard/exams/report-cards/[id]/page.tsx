@@ -39,7 +39,7 @@ export default function ReportCardPage({ params }: { params: Promise<{ id: strin
       {(card.loading || lookup.loading) && <Loading />}
 
       {data && summary && !lookup.loading && (
-        <article className="space-y-6 rounded-lg border bg-white p-6 print:border-0 print:p-0">
+        <article className="space-y-6 rounded-lg border bg-card p-6 print:border-0 print:p-0">
           <header className="border-b pb-4 text-center">
             <p className="text-sm uppercase tracking-widest text-muted-foreground">Report card</p>
             <h1 className="text-2xl font-bold">{student.data ? studentLabel(student.data) : "Student"}</h1>

@@ -123,7 +123,7 @@ export default function ClassTimetablePage({ searchParams }: { searchParams: Pro
           value={{ year, class: filters.class ?? "", section: filters.section ?? "" }}
           onChange={(v) => setFilters({ year: v.year, class: v.class, section: v.section })}
         />
-        <div className="inline-flex rounded-md border bg-white p-1" role="tablist" aria-label="Timetable range">
+        <div className="inline-flex rounded-md border bg-card p-1" role="tablist" aria-label="Timetable range">
           {(["week", "today"] as const).map((v) => (
             <button
               key={v}
@@ -257,7 +257,7 @@ function SlotEditor({
         aria-labelledby="slot-editor-title"
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md space-y-4 rounded-lg bg-white p-5 shadow-xl"
+        className="w-full max-w-md space-y-4 rounded-lg bg-card p-5 shadow-xl"
       >
         <div>
           <h2 id="slot-editor-title" className="font-semibold">

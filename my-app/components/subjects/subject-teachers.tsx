@@ -27,7 +27,7 @@ export default function SubjectTeachers({ subjectId }: { subjectId: string }) {
         <ul className="divide-y rounded-md border text-sm">
           {teachers.data!.map((t) => (
             <li key={getId(t)} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
-              <Link href={`/dashboard/staff/${getId(t)}`} className="font-medium hover:underline">
+              <Link href={`/dashboard/staff/${getId(t)}`} className="font-medium text-link hover:underline">
                 {fullName(t)}
               </Link>
               <span className="text-muted-foreground">

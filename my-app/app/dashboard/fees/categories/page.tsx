@@ -73,7 +73,7 @@ export default function FeeCategoriesPage() {
     <div className="max-w-4xl space-y-6">
       <PageHeader title="Fee categories" description="Types of fees, like Tuition, Transport or Library" />
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border bg-white p-4 sm:p-6">
+      <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border bg-card p-4 sm:p-6">
         <h2 className="font-semibold">{editingId ? "Edit category" : "Add category"}</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Name" htmlFor="cat-name" required>
@@ -103,7 +103,7 @@ export default function FeeCategoriesPage() {
       ) : rows.length === 0 ? (
         <EmptyState>No fee categories yet.</EmptyState>
       ) : (
-        <ul className="divide-y rounded-lg border bg-white">
+        <ul className="divide-y rounded-lg border bg-card">
           {rows.map((c) => (
             <li key={getId(c)} className="flex items-center justify-between gap-3 p-4">
               <div className="min-w-0">

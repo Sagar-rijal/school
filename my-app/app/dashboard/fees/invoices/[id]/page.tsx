@@ -72,7 +72,7 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
               items={[
                 {
                   label: "Student",
-                  value: <Link href={`/dashboard/students/${inv.student_id}`} className="underline">{student.data ? studentLabel(student.data) : "View student"}</Link>,
+                  value: <Link href={`/dashboard/students/${inv.student_id}`} className="text-link underline">{student.data ? studentLabel(student.data) : "View student"}</Link>,
                 },
                 { label: "Fee structure", value: structure.data?.name },
                 { label: "Academic year", value: lookup.yearName(inv.academic_year_id) },

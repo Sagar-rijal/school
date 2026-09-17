@@ -98,7 +98,7 @@ export default function SectionsManager({ classId, yearId }: { classId: string; 
           No sections yet. Add the first one below.
         </p>
       ) : (
-        <ul className="divide-y rounded-lg border bg-white">
+        <ul className="divide-y rounded-lg border bg-card">
           {sections.map((section) => {
             const id = getId(section);
             return (
@@ -163,7 +163,7 @@ export default function SectionsManager({ classId, yearId }: { classId: string; 
         </ul>
       )}
 
-      <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-3 rounded-lg border bg-white p-4">
+      <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-3 rounded-lg border bg-card p-4">
         <div className="min-w-40 flex-1 space-y-1.5">
           <label htmlFor="new-section-name" className="text-sm font-medium">Section name</label>
           <Input id="new-section-name" required placeholder="A" value={newName} onChange={(e) => setNewName(e.target.value)} />

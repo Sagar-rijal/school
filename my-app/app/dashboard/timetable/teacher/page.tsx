@@ -59,7 +59,7 @@ export default function TeacherSchedulePage({ searchParams }: { searchParams: Pr
             <option key={getId(t)} value={getId(t)}>{fullName(t)}</option>
           ))}
         </Select>
-        <div className="inline-flex rounded-md border bg-white p-1" role="tablist" aria-label="Schedule range">
+        <div className="inline-flex rounded-md border bg-card p-1" role="tablist" aria-label="Schedule range">
           {(["week", "today"] as const).map((v) => (
             <button
               key={v}

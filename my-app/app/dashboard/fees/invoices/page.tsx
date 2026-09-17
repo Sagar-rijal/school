@@ -79,7 +79,7 @@ export default function InvoicesPage({ searchParams }: { searchParams: Promise<F
         <EmptyState>No invoices for this selection.</EmptyState>
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             <StatTile label="Billed" value={formatCurrency(totals.billed)} />
             <StatTile label="Collected" value={formatCurrency(totals.paid)} tone="green" />
             <StatTile label="Outstanding" value={formatCurrency(totals.due)} tone={totals.due > 0 ? "red" : undefined} />
@@ -101,12 +101,12 @@ export default function InvoicesPage({ searchParams }: { searchParams: Promise<F
               {rows.map(({ inv, amounts }) => (
                 <tr key={getId(inv)} className="hover:bg-muted/30">
                   <TD>
-                    <Link href={`/dashboard/fees/invoices/${getId(inv)}`} className="font-mono text-xs font-medium hover:underline">
+                    <Link href={`/dashboard/fees/invoices/${getId(inv)}`} className="font-mono text-xs font-medium text-link hover:underline">
                       {inv.invoice_number}
                     </Link>
                   </TD>
                   <TD>
-                    <Link href={`/dashboard/students/${inv.student_id}`} className="hover:underline">{students.name(inv.student_id)}</Link>
+                    <Link href={`/dashboard/students/${inv.student_id}`} className="text-link hover:underline">{students.name(inv.student_id)}</Link>
                   </TD>
                   <TD className="text-muted-foreground">{structureById.get(inv.fee_structure_id)?.name ?? "—"}</TD>
                   <TD>{formatDate(inv.due_date)}</TD>

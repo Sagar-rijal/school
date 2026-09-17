@@ -61,7 +61,7 @@ export default function ParentsPanel({ studentId }: { studentId: string }) {
             {linked.data!.map((p) => (
               <li key={getId(p)} className="flex flex-wrap items-center justify-between gap-2 p-3">
                 <div className="min-w-0">
-                  <Link href={`/dashboard/parents/${getId(p)}`} className="font-medium hover:underline">
+                  <Link href={`/dashboard/parents/${getId(p)}`} className="font-medium text-link hover:underline">
                     {fullName(p)}
                   </Link>
                   <p className="text-sm text-muted-foreground">

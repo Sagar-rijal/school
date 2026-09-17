@@ -110,7 +110,7 @@ export default function ClassesPage({ searchParams }: { searchParams: Promise<{ 
           No classes in this academic year yet.
         </p>
       ) : (
-        <ul className="divide-y rounded-lg border bg-white">
+        <ul className="divide-y rounded-lg border bg-card">
           {classes.map((cls) => {
             const id = getId(cls);
             const sections = [...(loaded?.sectionsByClass[id] ?? [])].sort((a, b) =>
@@ -119,7 +119,7 @@ export default function ClassesPage({ searchParams }: { searchParams: Promise<{ 
             return (
               <li key={id} className="flex flex-wrap items-center justify-between gap-3 p-4">
                 <div className="min-w-0 space-y-1.5">
-                  <Link href={`/dashboard/classes/${id}`} className="font-semibold hover:underline">
+                  <Link href={`/dashboard/classes/${id}`} className="font-semibold text-link hover:underline">
                     {cls.name}
                   </Link>
                   <div className="flex flex-wrap gap-1.5">

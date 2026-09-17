@@ -4,7 +4,7 @@ import { cn, formatEnum } from "@/lib/utils";
 /** Scrollable table wrapper — tables may be wider than a phone screen. */
 export function Table({ className, children }: { className?: string; children: React.ReactNode }) {
   return (
-    <div className={cn("overflow-x-auto rounded-lg border bg-white", className)}>
+    <div className={cn("overflow-x-auto rounded-lg border bg-card", className)}>
       <table className="w-full min-w-max text-sm">{children}</table>
     </div>
   );
@@ -43,7 +43,7 @@ const TONES = {
   yellow: "bg-amber-100 text-amber-800",
   red: "bg-red-100 text-red-800",
   blue: "bg-blue-100 text-blue-800",
-  gray: "bg-gray-100 text-gray-700",
+  gray: "bg-muted text-muted-foreground",
 } as const;
 
 export type Tone = keyof typeof TONES;
@@ -75,7 +75,7 @@ export function DetailList({ items }: { items: { label: string; value?: React.Re
 
 export function Card({ title, action, children, className }: { title?: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
-    <section className={cn("rounded-lg border bg-white p-4 sm:p-5", className)}>
+    <section className={cn("rounded-lg border bg-card p-4 sm:p-5", className)}>
       {(title || action) && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           {title && <h2 className="font-semibold">{title}</h2>}
@@ -111,9 +111,9 @@ export function NumberStats({ data, format }: { data: unknown; format?: (key: st
 
 export function StatTile({ label, value, tone }: { label: string; value: React.ReactNode; tone?: "red" | "green" }) {
   return (
-    <div className="rounded-lg border bg-white p-3">
+    <div className="rounded-lg border bg-card p-3">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className={cn("text-lg font-semibold", tone === "red" && "text-red-700", tone === "green" && "text-green-700")}>{value}</p>
+      <p className={cn("text-base font-semibold tabular-nums sm:text-lg", tone === "red" && "text-red-700", tone === "green" && "text-green-700")}>{value}</p>
     </div>
   );
 }

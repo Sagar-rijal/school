@@ -112,7 +112,7 @@ export default function SubjectsPage({ searchParams }: { searchParams: Promise<{
           {classId ? "No subjects are linked to this class yet." : "No subjects yet."}
         </p>
       ) : (
-        <ul className="divide-y rounded-lg border bg-white">
+        <ul className="divide-y rounded-lg border bg-card">
           {subjects.map((subject) => {
             const id = getId(subject);
             return (
