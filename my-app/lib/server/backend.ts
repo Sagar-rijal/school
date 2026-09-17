@@ -98,10 +98,15 @@ export function clearCookieHeader(name: string) {
   return `${name}=; Path=/; Max-Age=0`;
 }
 
+const SESSION_COOKIES = [ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE];
+
 /**
  * Makes a backend Set-Cookie usable on this site: drops Domain (it would name the
  * backend's host, so the browser rejects it) and forces Path=/. In development,
  * also drops Secure so cookies work on http://localhost.
+ *
+ * Session cookies are forced to HttpOnly — the backend omits it, which would let any
+ * script on the page read the tokens.
  */
 export function sanitizeSetCookie(cookie: string) {
   let parts = cookie
@@ -110,9 +115,15 @@ export function sanitizeSetCookie(cookie: string) {
     .filter((p) => p && !/^domain=/i.test(p))
     .map((p) => (/^path=/i.test(p) ? "Path=/" : p));
 
+  const name = parts[0]?.split("=")[0]?.trim();
+  if (SESSION_COOKIES.includes(name) && !parts.some((p) => /^httponly$/i.test(p))) {
+    parts.push("HttpOnly");
+  }
+
   if (!isProduction) {
+    // Over plain http a cookie is rejected outright if it keeps Secure, SameSite=None or Partitioned
     parts = parts
-      .filter((p) => !/^secure$/i.test(p))
+      .filter((p) => !/^(secure|partitioned)$/i.test(p))
       .map((p) => (/^samesite=none$/i.test(p) ? "SameSite=Lax" : p));
   }
   return parts.join("; ");

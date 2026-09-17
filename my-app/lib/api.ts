@@ -3,6 +3,9 @@ import { useAuthStore } from "@/store/useAuthStore";
 
 const BASE_URL = "/api/v1/school-backend";
 
+/** Give up rather than leaving a page loading forever on a stalled connection. */
+const REQUEST_TIMEOUT_MS = 30_000;
+
 type QueryValue = string | number | boolean | null | undefined;
 
 type RequestOptions = {
@@ -38,9 +41,11 @@ function buildQuery(query?: Record<string, QueryValue>) {
   return qs ? `?${qs}` : "";
 }
 
-/** Turns FastAPI error bodies (`detail` string or validation array) into one message. */
-function extractErrorMessage(data: unknown): string {
-  if (!data || typeof data !== "object") return "Something went wrong";
+/** Turns backend error bodies into one message: `detail`, `message`, plain text, or the status. */
+function extractErrorMessage(data: unknown, status: number): string {
+  const fallback = `Request failed (${status}). Please try again.`;
+  if (typeof data === "string" && data.trim()) return data.trim().slice(0, 200);
+  if (!data || typeof data !== "object") return fallback;
   const { detail, message } = data as { detail?: unknown; message?: unknown };
 
   if (typeof detail === "string") return detail;
@@ -53,7 +58,7 @@ function extractErrorMessage(data: unknown): string {
       .join(", ");
   }
   if (typeof message === "string") return message;
-  return "Something went wrong";
+  return fallback;
 }
 
 /** Session is gone (refresh already failed server-side) — send the user to login. */
@@ -75,15 +80,24 @@ export async function request<T = unknown>(
 ): Promise<T> {
   const url = `${path}${buildQuery(options.query)}`;
 
-  const response = await fetch(url, {
-    method: options.method || "GET",
-    headers: {
-      ...(options.body !== undefined ? { "Content-Type": "application/json" } : {}),
-      ...(options.headers || {}),
-    },
-    credentials: "include",
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: options.method || "GET",
+      headers: {
+        ...(options.body !== undefined ? { "Content-Type": "application/json" } : {}),
+        ...(options.headers || {}),
+      },
+      credentials: "include",
+      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "TimeoutError") {
+      throw new ApiError("The server took too long to respond. Please try again.", 408);
+    }
+    throw new ApiError("Could not reach the server. Check your connection and try again.", 0);
+  }
 
   const text = await response.text();
   let data: unknown = null;
@@ -101,7 +115,7 @@ export async function request<T = unknown>(
   }
 
   if (!response.ok) {
-    throw new ApiError(extractErrorMessage(data), response.status);
+    throw new ApiError(extractErrorMessage(data, response.status), response.status);
   }
 
   return data as T;
