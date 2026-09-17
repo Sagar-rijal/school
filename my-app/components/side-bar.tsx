@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useState, useRef, useEffect } from "react"
 import {
+  LayoutDashboard,
   School,
   CalendarRange,
   Layers,
@@ -25,13 +26,15 @@ import {
 import { logoutUser } from "@/lib/auth"
 import { useAuthStore } from "@/store/useAuthStore"
 
-type NavLink = { href: string; label: string; icon: LucideIcon }
+type NavLink = { href: string; label: string; icon: LucideIcon; exact?: boolean }
 
 // Add a link here as each feature's pages are built
 const groups: { title: string; links: NavLink[] }[] = [
   {
     title: "Setup",
     links: [
+      // exact: /dashboard is the overview, every other page lives under it
+      { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
       { href: "/dashboard/schools", label: "Schools", icon: School },
       { href: "/dashboard/academic-years", label: "Academic years", icon: CalendarRange },
       { href: "/dashboard/classes", label: "Classes", icon: Layers },
@@ -114,7 +117,7 @@ function SidebarContent({
             <p className="px-3 text-xs font-medium uppercase tracking-wide text-muted-foreground/70">{group.title}</p>
             {group.links.map((link) => {
               const Icon = link.icon
-              const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`)
+              const isActive = link.exact ? pathname === link.href : pathname === link.href || pathname.startsWith(`${link.href}/`)
 
               return (
                 <Link

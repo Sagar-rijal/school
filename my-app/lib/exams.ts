@@ -40,6 +40,7 @@ export function enterBulkMarks(payload: BulkMarksPayload) {
   return apiRequest("/exams/marks/bulk", { method: "POST", body: payload });
 }
 
+/** Single-result correction. The UI re-submits /exams/marks/bulk instead, which updates existing results. */
 export function updateExamResult(resultId: string, payload: ExamResultUpdatePayload) {
   return apiRequest(`/exams/marks/${resultId}`, { method: "PUT", body: payload });
 }

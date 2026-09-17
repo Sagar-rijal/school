@@ -19,12 +19,14 @@ import {
   bulkUploadTimetable,
   clearClassTimetable,
   deleteTimetableEntry,
+  getClassDayTimetable,
   getClassWeeklyTimetable,
   listPeriods,
   saveTimetableEntry,
 } from "@/lib/timetable";
 import { DAYS_OF_WEEK, SLOT_TYPES, type DayOfWeek, type PeriodDefinition, type SlotType, type TimetableEntry } from "@/lib/types/timetable";
-import { emptyToNull, formatEnum, fullName, getErrorMessage } from "@/lib/utils";
+import { todayDay } from "@/lib/day";
+import { cn, emptyToNull, formatEnum, fullName, getErrorMessage } from "@/lib/utils";
 
 type Filters = { year?: string; class?: string; section?: string };
 type Editing = { day: DayOfWeek; period: PeriodDefinition; entry?: TimetableEntry };
@@ -37,8 +39,13 @@ export default function ClassTimetablePage({ searchParams }: { searchParams: Pro
   const ready = !!(year && filters.class && filters.section);
 
   const periods = useQuery(year ? `periods:${year}` : null, () => listPeriods(year));
-  const timetable = useQuery(ready ? `timetable:${year}:${filters.class}:${filters.section}` : null, () =>
-    getClassWeeklyTimetable(filters.class!, filters.section!, year)
+  // Editing always works on the whole week; "Today" is a read-focused quick view
+  const [view, setView] = useState<"week" | "today">("week");
+  const today = todayDay();
+  const timetable = useQuery(ready ? `timetable:${year}:${filters.class}:${filters.section}:${view}` : null, () =>
+    view === "today"
+      ? getClassDayTimetable(filters.class!, filters.section!, today, year)
+      : getClassWeeklyTimetable(filters.class!, filters.section!, year)
   );
   const subjects = useQuery(filters.class ? `subjects:class:${filters.class}` : null, async () => (await listSubjects({ class_id: filters.class })) ?? []);
   const teachers = useQuery("staff:teaching", () => listStaff({ staff_type: "TEACHING" }));
@@ -110,11 +117,26 @@ export default function ClassTimetablePage({ searchParams }: { searchParams: Pro
     <div className="space-y-4">
       <PageHeader title="Class timetable" description="Click a slot to set the subject, teacher and room" />
 
-      <ClassSectionPicker
-        years={years}
-        value={{ year, class: filters.class ?? "", section: filters.section ?? "" }}
-        onChange={(v) => setFilters({ year: v.year, class: v.class, section: v.section })}
-      />
+      <div className="flex flex-wrap items-center gap-2">
+        <ClassSectionPicker
+          years={years}
+          value={{ year, class: filters.class ?? "", section: filters.section ?? "" }}
+          onChange={(v) => setFilters({ year: v.year, class: v.class, section: v.section })}
+        />
+        <div className="inline-flex rounded-md border bg-white p-1" role="tablist" aria-label="Timetable range">
+          {(["week", "today"] as const).map((v) => (
+            <button
+              key={v}
+              role="tab"
+              aria-selected={view === v}
+              onClick={() => setView(v)}
+              className={cn("rounded px-3 py-1 text-sm font-medium", view === v ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
+            >
+              {v === "week" ? "Whole week" : "Today"}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {!ready ? (
         <EmptyState>Select a class and section to view its timetable.</EmptyState>
@@ -129,7 +151,7 @@ export default function ClassTimetablePage({ searchParams }: { searchParams: Pro
         <>
           {(error || timetable.error || periods.error) && <Alert type="error">{error || timetable.error || periods.error}</Alert>}
 
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className={cn("flex flex-wrap items-center justify-between gap-2", view === "today" && "hidden")}>
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="text-muted-foreground">Copy</span>
               <Select aria-label="Day to copy" value={copyFrom} onChange={(e) => setCopyFrom(e.target.value as DayOfWeek)} className="h-8 w-auto">
@@ -145,6 +167,7 @@ export default function ClassTimetablePage({ searchParams }: { searchParams: Pro
           <WeeklyGrid
             periods={periods.data!}
             entries={entries}
+            days={view === "today" ? [today] : undefined}
             onSlotClick={(day, period, entry) => {
               setError("");
               setEditing({ day, period, entry });

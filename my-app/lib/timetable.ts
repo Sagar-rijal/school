@@ -37,6 +37,7 @@ export function saveTimetableEntry(payload: TimetableEntryPayload) {
   return apiRequest("/timetable/entries", { method: "POST", body: payload });
 }
 
+/** Single-slot update. The UI posts to /timetable/entries instead, which replaces the slot for that day+period. */
 export function updateTimetableEntry(entryId: string, payload: TimetableEntryUpdatePayload) {
   return apiRequest(`/timetable/entries/${entryId}`, { method: "PUT", body: payload });
 }
@@ -67,6 +68,16 @@ export async function getTeacherWeeklySchedule(staffId: string, academicYearId: 
   return normalizeWeekly(unwrap(res));
 }
 
+export async function getClassDayTimetable(classId: string, sectionId: string, day: DayOfWeek, academicYearId: string) {
+  const res = await apiRequest(`/timetable/class/${classId}/${sectionId}/day/${day}`, { query: { academic_year_id: academicYearId } });
+  return normalizeWeekly(unwrap(res), day);
+}
+
+export async function getTeacherDaySchedule(staffId: string, day: DayOfWeek, academicYearId: string) {
+  const res = await apiRequest(`/timetable/teacher/${staffId}/day/${day}`, { query: { academic_year_id: academicYearId } });
+  return normalizeWeekly(unwrap(res), day);
+}
+
 // ── Weekly response ──
 
 type Json = Record<string, unknown>;
@@ -85,8 +96,10 @@ function toEntry(item: unknown, day?: DayOfWeek): TimetableEntry | null {
  * The weekly endpoints return a schedule "grouped by day of week", but the exact
  * shape isn't documented. Accepts a flat list of entries, an object keyed by day
  * ({ MONDAY: [...] }), or a list of { day, periods|entries } groups.
+ *
+ * `defaultDay` is used for day-scoped responses whose entries omit the day.
  */
-export function normalizeWeekly(raw: unknown): TimetableEntry[] {
+export function normalizeWeekly(raw: unknown, defaultDay?: DayOfWeek): TimetableEntry[] {
   const source = isObject(raw) && (Array.isArray(raw.days) || Array.isArray(raw.schedule)) ? (raw.days ?? raw.schedule) : raw;
   const out: TimetableEntry[] = [];
 
@@ -96,11 +109,11 @@ export function normalizeWeekly(raw: unknown): TimetableEntry[] {
       if (Array.isArray(nested)) {
         const day = (isObject(item) ? item.day_of_week ?? item.day : undefined) as DayOfWeek | undefined;
         nested.forEach((n) => {
-          const entry = toEntry(n, isDay(day) ? (String(day).toUpperCase() as DayOfWeek) : undefined);
+          const entry = toEntry(n, isDay(day) ? (String(day).toUpperCase() as DayOfWeek) : defaultDay);
           if (entry) out.push(entry);
         });
       } else {
-        const entry = toEntry(item);
+        const entry = toEntry(item, defaultDay);
         if (entry) out.push(entry);
       }
     }

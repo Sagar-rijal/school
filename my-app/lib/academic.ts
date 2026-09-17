@@ -22,6 +22,7 @@ export async function listAcademicYears() {
   return unwrap<AcademicYear[]>(await apiRequest("/academic/years"));
 }
 
+/** Not used by the UI: the current year is taken from the list (`useAcademicYears`) to save a request. */
 export async function getCurrentAcademicYear() {
   return unwrap<AcademicYear | null>(await apiRequest("/academic/years/current"));
 }

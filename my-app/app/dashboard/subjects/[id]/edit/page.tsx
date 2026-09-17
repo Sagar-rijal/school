@@ -4,6 +4,7 @@ import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Alert, PageHeader } from "@/components/form";
 import SubjectForm from "@/components/subjects/subject-form";
+import SubjectTeachers from "@/components/subjects/subject-teachers";
 import { useAcademicYears } from "@/hooks/use-academic-years";
 import { useClasses } from "@/hooks/use-classes";
 import { getSubject, updateSubject } from "@/lib/academic";
@@ -27,7 +28,7 @@ export default function EditSubjectPage({ params }: { params: Promise<{ id: stri
   const ready = subject && !yearsLoading && !classesLoading;
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-3xl space-y-6">
       <PageHeader title="Edit subject" backHref="/dashboard/subjects" />
       {error && <Alert type="error">{error}</Alert>}
       {!ready && !error && <p className="text-muted-foreground">Loading...</p>}
@@ -42,6 +43,7 @@ export default function EditSubjectPage({ params }: { params: Promise<{ id: stri
           onSuccess={() => router.push("/dashboard/subjects")}
         />
       )}
+      {ready && <SubjectTeachers subjectId={id} />}
     </div>
   );
 }

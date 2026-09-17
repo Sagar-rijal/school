@@ -10,17 +10,19 @@ type Props = {
   renderEntry: (entry: TimetableEntry) => ReactNode;
   /** Makes slots clickable (class timetable editing). */
   onSlotClick?: (day: DayOfWeek, period: PeriodDefinition, entry?: TimetableEntry) => void;
+  /** Restrict the columns, e.g. a single day. Defaults to the whole week. */
+  days?: DayOfWeek[];
 };
 
 /** Days × periods grid. Sunday is shown only when something is scheduled on it. */
-export default function WeeklyGrid({ periods, entries, renderEntry, onSlotClick }: Props) {
-  const days = DAYS_OF_WEEK.filter((d) => d !== "SUNDAY" || entries.some((e) => e.day_of_week === "SUNDAY"));
+export default function WeeklyGrid({ periods, entries, renderEntry, onSlotClick, days: only }: Props) {
+  const days = only ?? DAYS_OF_WEEK.filter((d) => d !== "SUNDAY" || entries.some((e) => e.day_of_week === "SUNDAY"));
   const slot = (day: DayOfWeek, periodNumber: number) =>
     entries.find((e) => e.day_of_week === day && e.period_number === periodNumber);
 
   return (
     <div className="overflow-x-auto rounded-lg border bg-white">
-      <table className="w-full min-w-[720px] table-fixed border-collapse text-sm">
+      <table className={cn("w-full table-fixed border-collapse text-sm", days.length > 2 && "min-w-[720px]")}>
         <thead>
           <tr className="border-b bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
             <th className="w-28 px-3 py-2 text-left font-medium">Period</th>
