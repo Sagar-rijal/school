@@ -11,6 +11,7 @@ export function markAttendanceBulk(payload: BulkAttendancePayload) {
   return apiRequest("/attendance/bulk", { method: "POST", body: payload });
 }
 
+/** Single-record correction. The UI re-saves the whole class via /attendance/bulk, which the spec says overwrites. */
 export function updateAttendanceRecord(recordId: string, payload: AttendanceUpdatePayload) {
   return apiRequest(`/attendance/${recordId}`, { method: "PUT", body: payload });
 }

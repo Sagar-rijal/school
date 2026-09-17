@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useState, useRef, useEffect } from "react"
 import {
+  LayoutDashboard,
   School,
   CalendarRange,
   Layers,
@@ -14,6 +15,8 @@ import {
   UserPlus,
   CalendarCheck,
   IndianRupee,
+  ClipboardList,
+  Clock,
   UserCircle,
   LogOut,
   Menu,
@@ -23,13 +26,15 @@ import {
 import { logoutUser } from "@/lib/auth"
 import { useAuthStore } from "@/store/useAuthStore"
 
-type NavLink = { href: string; label: string; icon: LucideIcon }
+type NavLink = { href: string; label: string; icon: LucideIcon; exact?: boolean }
 
 // Add a link here as each feature's pages are built
 const groups: { title: string; links: NavLink[] }[] = [
   {
     title: "Setup",
     links: [
+      // exact: /dashboard is the overview, every other page lives under it
+      { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
       { href: "/dashboard/schools", label: "Schools", icon: School },
       { href: "/dashboard/academic-years", label: "Academic years", icon: CalendarRange },
       { href: "/dashboard/classes", label: "Classes", icon: Layers },
@@ -37,9 +42,11 @@ const groups: { title: string; links: NavLink[] }[] = [
     ],
   },
   {
-    title: "Daily",
+    title: "Academics",
     links: [
       { href: "/dashboard/attendance", label: "Attendance", icon: CalendarCheck },
+      { href: "/dashboard/timetable", label: "Timetable", icon: Clock },
+      { href: "/dashboard/exams", label: "Exams", icon: ClipboardList },
     ],
   },
   {
@@ -110,7 +117,7 @@ function SidebarContent({
             <p className="px-3 text-xs font-medium uppercase tracking-wide text-muted-foreground/70">{group.title}</p>
             {group.links.map((link) => {
               const Icon = link.icon
-              const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`)
+              const isActive = link.exact ? pathname === link.href : pathname === link.href || pathname.startsWith(`${link.href}/`)
 
               return (
                 <Link
@@ -190,12 +197,12 @@ export default function Sidebar() {
   return (
     <>
       {/* ── DESKTOP SIDEBAR (unchanged) ── */}
-      <aside className="hidden md:flex w-64 h-screen border-r bg-background p-4 flex-col shrink-0">
+      <aside className="hidden md:flex print:hidden w-64 h-screen border-r bg-background p-4 flex-col shrink-0">
         <SidebarContent />
       </aside>
 
       {/* ── MOBILE TOPBAR ── */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center gap-3 px-4 py-3 bg-background border-b">
+      <div className="md:hidden print:hidden fixed top-0 left-0 right-0 z-40 flex items-center gap-3 px-4 py-3 bg-background border-b">
         <button
           onClick={() => setMobileOpen(true)}
           aria-label="Open menu"

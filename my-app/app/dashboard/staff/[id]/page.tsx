@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,8 @@ import StaffForm from "@/components/staff/staff-form";
 import TeacherClassesCard from "@/components/staff/teacher-classes-card";
 import { useQuery } from "@/hooks/use-query";
 import { listSubjects } from "@/lib/academic";
-import { getStaffMember, listDepartments, toStaffUpdate, updateStaff } from "@/lib/staff";
-import { formatDate, formatEnum, fullName } from "@/lib/utils";
+import { deleteStaff, getStaffMember, listDepartments, toStaffUpdate, updateStaff } from "@/lib/staff";
+import { formatDate, formatEnum, fullName, getErrorMessage } from "@/lib/utils";
 import { STAFF_STATUS_TONES } from "@/lib/types/staff";
 
 export default function StaffMemberPage({ params }: { params: Promise<{ id: string }> }) {
@@ -20,6 +20,17 @@ export default function StaffMemberPage({ params }: { params: Promise<{ id: stri
   const member = useQuery(`staff:${id}`, () => getStaffMember(id));
   const departments = useQuery("departments", listDepartments);
   const subjects = useQuery("subjects", async () => (await listSubjects()) ?? []);
+  const [deleteError, setDeleteError] = useState("");
+
+  const handleDelete = async () => {
+    if (!data || !window.confirm(`Delete ${fullName(data)}? Set the status to Resigned instead if you only want to deactivate them.`)) return;
+    try {
+      await deleteStaff(id);
+      router.push("/dashboard/staff");
+    } catch (err) {
+      setDeleteError(getErrorMessage(err, "Failed to delete staff member"));
+    }
+  };
 
   const loading = member.loading || departments.loading || subjects.loading;
   const data = member.data;
@@ -33,7 +44,7 @@ export default function StaffMemberPage({ params }: { params: Promise<{ id: stri
         action={data && <StatusBadge value={data.status ?? "ACTIVE"} tones={STAFF_STATUS_TONES} />}
       />
 
-      {member.error && <Alert type="error">{member.error}</Alert>}
+      {(member.error || deleteError) && <Alert type="error">{member.error || deleteError}</Alert>}
       {loading && !member.error && <Loading />}
 
       {data && !loading && (
@@ -80,6 +91,12 @@ export default function StaffMemberPage({ params }: { params: Promise<{ id: stri
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
             />
+          </div>
+
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={handleDelete} className="text-red-600 hover:text-red-700">
+              Delete staff member
+            </Button>
           </div>
         </>
       )}

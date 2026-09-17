@@ -6,14 +6,16 @@ import { Alert } from "@/components/form";
 import { Card, EmptyState, Loading, NumberStats, StatusBadge } from "@/components/data-display";
 import { useQuery } from "@/hooks/use-query";
 import { getId } from "@/lib/api";
-import { getStudentFeeSummary, invoiceAmounts, listStudentInvoices } from "@/lib/fees";
+import { getStudentFeeSummary, invoiceAmounts, listPaymentsByStudent, listStudentInvoices } from "@/lib/fees";
 import { INVOICE_STATUS_TONES } from "@/lib/types/fees";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, formatEnum } from "@/lib/utils";
 
 /** Fee summary and invoices for a student. */
 export default function FeesCard({ studentId }: { studentId: string }) {
   const summary = useQuery(`fee-summary:${studentId}`, () => getStudentFeeSummary(studentId));
   const invoices = useQuery(`student-invoices:${studentId}`, () => listStudentInvoices(studentId));
+  const payments = useQuery(`student-payments:${studentId}`, () => listPaymentsByStudent(studentId));
+  const recentPayments = [...(payments.data ?? [])].sort((a, b) => b.payment_date.localeCompare(a.payment_date)).slice(0, 5);
 
   return (
     <Card
@@ -25,7 +27,9 @@ export default function FeesCard({ studentId }: { studentId: string }) {
       }
     >
       <div className="space-y-4">
-        {(summary.error || invoices.error) && <Alert type="error">{summary.error || invoices.error}</Alert>}
+        {(summary.error || invoices.error || payments.error) && (
+          <Alert type="error">{summary.error || invoices.error || payments.error}</Alert>
+        )}
         {summary.loading ? (
           <Loading />
         ) : (
@@ -50,6 +54,23 @@ export default function FeesCard({ studentId }: { studentId: string }) {
               </li>
             ))}
           </ul>
+        )}
+
+        {recentPayments.length > 0 && (
+          <div>
+            <p className="mb-2 text-sm font-medium">Recent receipts</p>
+            <ul className="divide-y rounded-md border text-sm">
+              {recentPayments.map((p) => (
+                <li key={getId(p) || p.receipt_number} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+                  <span>
+                    <span className="font-mono text-xs">{p.receipt_number}</span>
+                    <span className="text-muted-foreground"> · {formatDate(p.payment_date)} · {formatEnum(p.payment_mode)}</span>
+                  </span>
+                  <span className="font-semibold">{formatCurrency(p.amount_paid)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </div>
     </Card>

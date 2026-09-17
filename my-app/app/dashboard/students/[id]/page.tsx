@@ -10,6 +10,7 @@ import AttendanceCard from "@/components/students/attendance-card";
 import EnrollmentsPanel from "@/components/students/enrollments-panel";
 import FeesCard from "@/components/students/fees-card";
 import ParentsPanel from "@/components/students/parents-panel";
+import ResultsCard from "@/components/students/results-card";
 import { useQuery } from "@/hooks/use-query";
 import { deleteStudent, getStudent } from "@/lib/students";
 import { STUDENT_STATUS_TONES } from "@/lib/types/student";
@@ -90,6 +91,8 @@ export default function StudentProfilePage({
             <AttendanceCard studentId={id} />
             <FeesCard studentId={id} />
           </div>
+
+          <ResultsCard studentId={id} />
 
           <div className="flex justify-end">
             <Button variant="outline" onClick={handleDelete} className="text-red-600 hover:text-red-700">

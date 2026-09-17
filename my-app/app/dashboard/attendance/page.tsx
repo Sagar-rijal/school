@@ -10,7 +10,8 @@ import ClassSectionPicker from "@/components/class-section-picker";
 import { useAcademicYears } from "@/hooks/use-academic-years";
 import { useQuery } from "@/hooks/use-query";
 import { useUrlFilters } from "@/hooks/use-url-filters";
-import { getClassAttendance, markAttendanceBulk } from "@/lib/attendance";
+import { getClassAttendance, getClassAttendanceSummary, markAttendanceBulk } from "@/lib/attendance";
+import { listPeriods } from "@/lib/timetable";
 import { getRoster, studentLabel } from "@/lib/students";
 import {
   ATTENDANCE_STATUSES,
@@ -43,6 +44,10 @@ export default function AttendancePage({ searchParams }: { searchParams: Promise
   const ready = !!(year && filters.class && filters.section && (type === "DAILY" || period));
   const loadKey = ready ? `attendance:${year}:${filters.class}:${filters.section}:${date}:${type}:${period}` : null;
 
+  // Period definitions let the user pick a named period instead of typing a number
+  const periods = useQuery(year && type === "PERIOD" ? `periods:${year}` : null, () => listPeriods(year));
+  const teachingPeriods = (periods.data ?? []).filter((p) => !p.is_break);
+
   const sheet = useQuery(loadKey, async () => {
     const [roster, records] = await Promise.all([
       getRoster(year, filters.class!, filters.section!),
@@ -52,6 +57,11 @@ export default function AttendancePage({ searchParams }: { searchParams: Promise
     const relevant = records.filter((r) => (type === "PERIOD" ? r.period === period : r.period == null));
     return { roster, records: relevant };
   });
+
+  // What the backend has stored for this date — a check that the save landed
+  const summary = useQuery(ready ? `attendance-summary:${filters.class}:${filters.section}:${date}` : null, () =>
+    getClassAttendanceSummary(filters.class!, filters.section!, date)
+  );
 
   const savedMarks = useMemo(() => {
     const byStudent = new Map<string, AttendanceRecord>((sheet.data?.records ?? []).map((r) => [r.student_id, r]));
@@ -89,6 +99,15 @@ export default function AttendancePage({ searchParams }: { searchParams: Promise
   const unmarked = Object.values(marks).filter((m) => !m.status).length;
   const alreadySaved = (sheet.data?.records.length ?? 0) > 0;
 
+  // Numeric fields of the backend's class report, e.g. "Present 28 · Absent 2"
+  const summaryText =
+    summary.data && typeof summary.data === "object"
+      ? Object.entries(summary.data as Record<string, unknown>)
+          .filter((entry): entry is [string, number] => typeof entry[1] === "number")
+          .map(([key, value]) => `${formatEnum(key)} ${/percent/i.test(key) ? `${Math.round(value * 10) / 10}%` : value}`)
+          .join(" · ")
+      : "";
+
   const handleSave = async () => {
     if (!ready) return;
     if (unmarked > 0) {
@@ -117,6 +136,7 @@ export default function AttendancePage({ searchParams }: { searchParams: Promise
       setDraft(null);
       setSavedAt(new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }));
       sheet.reload();
+      summary.reload();
     } catch (err) {
       setError(getErrorMessage(err, "Failed to save attendance"));
     } finally {
@@ -146,22 +166,38 @@ export default function AttendancePage({ searchParams }: { searchParams: Promise
           <option value="DAILY">Daily</option>
           <option value="PERIOD">Per period</option>
         </Select>
-        {type === "PERIOD" && (
-          <Input
-            type="number"
-            min={1}
-            aria-label="Period number"
-            placeholder="Period"
-            value={filters.period ?? ""}
-            onChange={(e) => setFilters({ period: e.target.value })}
-            className="w-24"
-          />
-        )}
+        {type === "PERIOD" &&
+          (teachingPeriods.length > 0 ? (
+            <Select
+              aria-label="Period"
+              value={filters.period ?? ""}
+              onChange={(e) => setFilters({ period: e.target.value })}
+              className="w-auto min-w-44"
+            >
+              <option value="">Select period</option>
+              {teachingPeriods.map((p) => (
+                <option key={p.period_number} value={p.period_number}>
+                  {p.name} ({p.start_time}–{p.end_time})
+                </option>
+              ))}
+            </Select>
+          ) : (
+            // No periods defined for this year yet
+            <Input
+              type="number"
+              min={1}
+              aria-label="Period number"
+              placeholder={periods.loading ? "Loading..." : "Period"}
+              value={filters.period ?? ""}
+              onChange={(e) => setFilters({ period: e.target.value })}
+              className="w-24"
+            />
+          ))}
       </div>
 
       {!ready ? (
         <EmptyState>
-          Select a class and section{type === "PERIOD" ? " and a period number" : ""} to take attendance.
+          Select a class and section{type === "PERIOD" ? " and a period" : ""} to take attendance.
         </EmptyState>
       ) : sheet.loading ? (
         <Loading>Loading class roster...</Loading>
@@ -244,6 +280,8 @@ export default function AttendancePage({ searchParams }: { searchParams: Promise
               })}
             </TBody>
           </Table>
+
+          {summaryText && <p className="text-xs text-muted-foreground">Recorded on the server for this date: {summaryText}</p>}
 
           {error && <Alert type="error">{error}</Alert>}
           {savedAt && <Alert type="success">Attendance saved at {savedAt}.</Alert>}

@@ -47,11 +47,6 @@ export function todayInput() {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
-/** Numbers from inputs: "" → null, otherwise the number. */
-export function toNumberOrNull(value: string) {
-  return value.trim() === "" ? null : Number(value)
-}
-
 /** Copy of an object without some keys, e.g. fields an update endpoint doesn't accept. */
 export function omit<T extends object, K extends keyof T>(obj: T, ...keys: K[]): Omit<T, K> {
   const copy = { ...obj }
