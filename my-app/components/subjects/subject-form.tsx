@@ -58,7 +58,7 @@ export default function SubjectForm({ years, classes, defaultYearId, initialData
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 rounded-lg border bg-white p-4 shadow-sm sm:p-6">
+    <form onSubmit={handleSubmit} className="space-y-6 rounded-lg border bg-card p-4 sm:p-6">
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Subject name" htmlFor="name" required hint='For example "Mathematics"'>
           <Input id="name" required value={name} onChange={(e) => setName(e.target.value)} />

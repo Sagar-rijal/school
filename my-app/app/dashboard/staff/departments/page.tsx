@@ -81,7 +81,7 @@ export default function DepartmentsPage() {
     <div className="mx-auto max-w-4xl space-y-6">
       <PageHeader title="Departments" description="Group staff by department" backHref="/dashboard/staff" />
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border bg-white p-4 sm:p-6">
+      <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border bg-card p-4 sm:p-6">
         <h2 className="font-semibold">{editingId ? "Edit department" : "Add department"}</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Name" htmlFor="dept-name" required>
@@ -113,7 +113,7 @@ export default function DepartmentsPage() {
       ) : rows.length === 0 ? (
         <EmptyState>No departments yet.</EmptyState>
       ) : (
-        <ul className="divide-y rounded-lg border bg-white">
+        <ul className="divide-y rounded-lg border bg-card">
           {rows.map((d) => (
             <li key={getId(d)} className="flex items-center justify-between gap-3 p-4">
               <div className="min-w-0">

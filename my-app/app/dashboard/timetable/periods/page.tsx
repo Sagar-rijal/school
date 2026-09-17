@@ -112,7 +112,7 @@ export default function PeriodsPage({ searchParams }: { searchParams: Promise<{ 
 
       <AcademicYearSelect years={years} value={year} onChange={(y) => { reset(); setFilters({ year: y }); }} className="w-auto min-w-40" />
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border bg-white p-4 sm:p-6">
+      <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border bg-card p-4 sm:p-6">
         <h2 className="font-semibold">{editingId ? `Edit period ${form.period_number}` : "Add period"}</h2>
         <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
           <Field label="Number" htmlFor="p-number" required hint={editingId ? "Fixed" : undefined}>

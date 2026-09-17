@@ -97,7 +97,7 @@ export default function UserRolesPage({ params }: { params: Promise<{ id: string
             This user has no roles yet, so they can&apos;t access anything.
           </p>
         ) : (
-          <ul className="divide-y rounded-lg border bg-white">
+          <ul className="divide-y rounded-lg border bg-card">
             {roles.map((r) => (
               <li key={`${r.role}-${r.school_id}`} className="flex items-center justify-between gap-3 p-4">
                 <div className="min-w-0">
@@ -123,7 +123,7 @@ export default function UserRolesPage({ params }: { params: Promise<{ id: string
         )}
       </section>
 
-      <form onSubmit={handleAssign} className="space-y-4 rounded-lg border bg-white p-4 sm:p-6">
+      <form onSubmit={handleAssign} className="space-y-4 rounded-lg border bg-card p-4 sm:p-6">
         <h2 className="font-semibold">Assign a role</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Role" htmlFor="role" required>

@@ -139,7 +139,7 @@ export default function GenerateInvoicesPage({ searchParams }: { searchParams: P
       />
 
       {!fixedStudentId && (
-        <div className="inline-flex rounded-md border bg-white p-1" role="tablist">
+        <div className="inline-flex rounded-md border bg-card p-1" role="tablist">
           {(["single", "section"] as const).map((m) => (
             <button
               key={m}
@@ -161,7 +161,7 @@ export default function GenerateInvoicesPage({ searchParams }: { searchParams: P
       {fixedStudent.loading ? (
         <Loading />
       ) : (
-        <form onSubmit={mode === "single" ? handleSingle : handleSection} className="space-y-6 rounded-lg border bg-white p-4 shadow-sm sm:p-6">
+        <form onSubmit={mode === "single" ? handleSingle : handleSection} className="space-y-6 rounded-lg border bg-card p-4 sm:p-6">
           <Field label="Class & section" htmlFor="picker-year" required>
             <ClassSectionPicker
               years={years}

@@ -152,8 +152,8 @@ function SidebarContent({
         </button>
 
         {open && (
-          <div className="absolute bottom-full mb-2 left-0 w-full bg-white border rounded-lg shadow-lg z-50">
-            <div className="absolute bottom-[-6px] left-6 w-3 h-3 bg-white rotate-45 border-r border-b" />
+          <div className="absolute bottom-full mb-2 left-0 w-full bg-popover border rounded-lg shadow-lg z-50">
+            <div className="absolute -bottom-1.5 left-6 size-3 bg-popover rotate-45 border-r border-b" />
             <div className="p-4 space-y-3">
               <div className="text-sm">
                 <p className="text-muted-foreground">Signed in as</p>
@@ -197,12 +197,12 @@ export default function Sidebar() {
   return (
     <>
       {/* ── DESKTOP SIDEBAR (unchanged) ── */}
-      <aside className="hidden md:flex print:hidden w-64 h-screen border-r bg-background p-4 flex-col shrink-0">
+      <aside className="hidden md:flex print:hidden w-64 h-screen border-r bg-sidebar p-4 flex-col shrink-0">
         <SidebarContent />
       </aside>
 
       {/* ── MOBILE TOPBAR ── */}
-      <div className="md:hidden print:hidden fixed top-0 left-0 right-0 z-40 flex items-center gap-3 px-4 py-3 bg-background border-b">
+      <div className="md:hidden print:hidden fixed top-0 left-0 right-0 z-40 flex items-center gap-3 px-4 py-3 bg-sidebar border-b">
         <button
           onClick={() => setMobileOpen(true)}
           aria-label="Open menu"
@@ -236,7 +236,7 @@ export default function Sidebar() {
           />
 
           {/* Drawer panel */}
-          <aside className="relative z-10 w-72 max-w-[85vw] h-full bg-background p-4 flex flex-col shadow-xl animate-slide-in">
+          <aside className="relative z-10 w-72 max-w-[85vw] h-full bg-sidebar p-4 flex flex-col shadow-xl animate-slide-in">
             {/* Close button */}
             <button
               onClick={() => setMobileOpen(false)}

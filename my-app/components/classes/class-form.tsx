@@ -53,7 +53,7 @@ export default function ClassForm({ years, defaultYearId = "", initialData, subm
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 rounded-lg border bg-white p-4 shadow-sm sm:p-6">
+    <form onSubmit={handleSubmit} className="space-y-6 rounded-lg border bg-card p-4 sm:p-6">
       <Field
         label="Academic year"
         htmlFor="academic_year_id"

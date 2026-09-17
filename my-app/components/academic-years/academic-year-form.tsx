@@ -64,7 +64,7 @@ export default function AcademicYearForm({ initialData, submitLabel, onSubmit, o
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 rounded-lg border bg-white p-4 shadow-sm sm:p-6">
+    <form onSubmit={handleSubmit} className="space-y-6 rounded-lg border bg-card p-4 sm:p-6">
       <Field label="Name" htmlFor="name" required hint='For example "2026-27"'>
         <Input id="name" name="name" required value={form.name} onChange={handleChange} />
       </Field>

@@ -35,7 +35,7 @@ export default function ResultsCard({ studentId }: { studentId: string }) {
                 <Link
                   key={getId(card)}
                   href={`/dashboard/exams/report-cards/${getId(card)}`}
-                  className="rounded-md border px-3 py-2 text-sm hover:bg-accent"
+                  className="rounded-md border px-3 py-2 text-sm transition-colors hover:bg-accent"
                 >
                   <span className="font-medium">{card.exam_type ? formatEnum(card.exam_type) : "Report card"}</span>
                   <span className="text-muted-foreground">

@@ -27,7 +27,7 @@ export default function TeacherClassesCard({ userId }: { userId?: string | null 
         <ul className="divide-y rounded-md border">
           {assignments.data!.map((a) => (
             <li key={getId(a)} className="flex items-center justify-between gap-2 p-3 text-sm">
-              <Link href={`/dashboard/classes/${a.class_id}`} className="font-medium hover:underline">
+              <Link href={`/dashboard/classes/${a.class_id}`} className="font-medium text-link hover:underline">
                 {lookup.className(a.class_id)} · Section {lookup.sectionName(a.section_id)}
               </Link>
               <span className="text-muted-foreground">

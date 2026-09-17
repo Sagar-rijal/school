@@ -80,7 +80,7 @@ export default function ReportCardsPage({ searchParams }: { searchParams: Promis
         <EmptyState>Select a class, section and exam type.</EmptyState>
       ) : (
         <>
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-white p-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-card p-3">
             <p className="text-sm text-muted-foreground">
               Generating (again) recalculates totals, grades and ranks from all {formatEnum(examType).toLowerCase()} marks.
             </p>

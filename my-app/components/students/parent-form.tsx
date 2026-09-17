@@ -55,7 +55,7 @@ export default function ParentForm({ initialData, showUserId, submitLabel, onSub
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 rounded-lg border bg-white p-4 shadow-sm sm:p-6">
+    <form onSubmit={handleSubmit} className="space-y-8 rounded-lg border bg-card p-4 sm:p-6">
       <FormSection title="Parent / guardian">
         <Field label="First name" htmlFor="first_name" required>
           <Input id="first_name" name="first_name" required value={form.first_name} onChange={handleChange} />

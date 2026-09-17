@@ -68,7 +68,7 @@ export default function AcademicYearsPage() {
           No academic years yet. Create one before adding classes or students.
         </p>
       ) : (
-        <ul className="divide-y rounded-lg border bg-white">
+        <ul className="divide-y rounded-lg border bg-card">
           {years.map((year) => {
             const id = getId(year);
             return (

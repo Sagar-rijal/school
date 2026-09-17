@@ -83,7 +83,7 @@ export default function StudentForm({ initialData, submitLabel, onSubmit, childr
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 rounded-lg border bg-white p-4 shadow-sm sm:p-6">
+    <form onSubmit={handleSubmit} className="space-y-8 rounded-lg border bg-card p-4 sm:p-6">
       <FormSection title="Student details">
         <Field label="Admission number" htmlFor="admission_number" required hint={isEdit ? "Can't be changed" : undefined}>
           <Input id="admission_number" name="admission_number" required disabled={isEdit} value={form.admission_number} onChange={handleChange} />

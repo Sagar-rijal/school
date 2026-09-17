@@ -25,7 +25,7 @@ export default function UsersPage() {
       <PageHeader title="Users" description="Login accounts and their roles" />
 
       <div className="grid gap-4 md:grid-cols-2">
-        <section className="flex flex-col justify-between gap-4 rounded-lg border bg-white p-5">
+        <section className="flex flex-col justify-between gap-4 rounded-lg border bg-card p-5">
           <div>
             <h2 className="font-semibold">Create a user</h2>
             <p className="text-sm text-muted-foreground">
@@ -37,7 +37,7 @@ export default function UsersPage() {
           </Button>
         </section>
 
-        <section className="rounded-lg border bg-white p-5">
+        <section className="rounded-lg border bg-card p-5">
           <h2 className="font-semibold">Manage roles</h2>
           <p className="mb-4 text-sm text-muted-foreground">Look up a user by their ID.</p>
           <form onSubmit={handleLookup} className="flex gap-2">

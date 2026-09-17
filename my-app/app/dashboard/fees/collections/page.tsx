@@ -73,7 +73,7 @@ export default function CollectionsPage({ searchParams }: { searchParams: Promis
                   <tr key={getId(p) || p.receipt_number} className="hover:bg-muted/30">
                     <TD>{formatDate(p.payment_date)}</TD>
                     <TD>
-                      <Link href={`/dashboard/fees/invoices/${p.invoice_id}`} className="font-mono text-xs hover:underline">{p.receipt_number}</Link>
+                      <Link href={`/dashboard/fees/invoices/${p.invoice_id}`} className="font-mono text-xs text-link hover:underline">{p.receipt_number}</Link>
                     </TD>
                     <TD>{students.name(p.student_id)}</TD>
                     <TD>{formatEnum(p.payment_mode)}</TD>

@@ -21,7 +21,7 @@ export default function WeeklyGrid({ periods, entries, renderEntry, onSlotClick,
     entries.find((e) => e.day_of_week === day && e.period_number === periodNumber);
 
   return (
-    <div className="overflow-x-auto rounded-lg border bg-white">
+    <div className="overflow-x-auto rounded-lg border bg-card">
       <table className={cn("w-full table-fixed border-collapse text-sm", days.length > 2 && "min-w-[720px]")}>
         <thead>
           <tr className="border-b bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
