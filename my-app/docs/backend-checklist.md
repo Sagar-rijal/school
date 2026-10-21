@@ -26,7 +26,7 @@ If something fails, the fix is usually in one of these files:
 ## 1. Login & session
 
 - [ ] Wrong password shows the backend's error message
-- [ ] Correct login lands on `/dashboard/schools`
+- [ ] Correct super admin login lands on `/dashboard` and shows the platform overview
 - [ ] Terminal shows `[auth] login response: { keys: [...], ... }` — note where the token is.
       If login says *"didn't return an access token in a recognised format"*, add the
       real field/cookie name in `lib/server/backend.ts` (`TOKEN_KEYS`) or `lib/auth-constants.ts`
@@ -39,9 +39,11 @@ If something fails, the fix is usually in one of these files:
 
 ## 2. Schools
 
-- [ ] Schools list loads (`GET /tenant/`)
-- [ ] Add school → appears in the list
+- [ ] Schools list loads (`GET /tenant`)
+- [ ] Add school → success screen shows the generated admin email and temporary password once
 - [ ] Edit school → form is pre-filled, changes save
+- [ ] School links use the public `school_id` (for example `SPR...`), not the database `_id`
+- [ ] Disable and re-enable a school from the list or edit form; both changes persist after reload
 
 ## 3. Users & roles
 

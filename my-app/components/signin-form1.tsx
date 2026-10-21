@@ -42,10 +42,11 @@ export default function SignInForm({ redirectTo = "/dashboard" }: { redirectTo?:
     try {
       setLoading(true);
       const email = data.email.trim();
-      const { user } = await loginUser({ email, password: data.password });
+      const { user, mustChangePassword } = await loginUser({ email, password: data.password });
 
       setAuthUser({ email: user?.email ?? email, id: user?.id, name: user?.name });
-      router.replace(redirectTo);
+      router.replace(mustChangePassword ? "/dashboard/change-password" : redirectTo);
+      router.refresh();
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);

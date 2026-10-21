@@ -10,6 +10,9 @@ npm install
 npm run dev          # http://localhost:3000
 ```
 
+Development uses Next.js's Webpack compiler because Turbopack 16.2.4 resolves
+the Tailwind CSS import from the parent `school/` directory in this checkout.
+
 Create `.env.local` with the backend origin (no path, no trailing slash):
 
 ```
@@ -93,7 +96,7 @@ Conventions worth keeping:
 
 `npm run build` type-checks and `npm run lint` must both pass.
 
-The features were built against the OpenAPI spec while the backend was offline, and
-verified in headless Chrome against a fixture backend (all pages render, and attendance,
-marks, timetable, payments and report cards send the expected requests). Before trusting
-the app against the real server, work through `docs/backend-checklist.md`.
+The original features were built against the OpenAPI spec while the backend was offline.
+The super admin school and auth flows now follow the newer Postman collection. Verify
+them with a live backend before relying on onboarding, especially the one-time admin
+credentials shown after creating a school.

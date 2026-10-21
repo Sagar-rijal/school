@@ -4,6 +4,7 @@ import {
   backendUrl,
   describeShape,
   extractUser,
+  mustChangePassword,
   parseJson,
 } from "@/lib/server/backend";
 
@@ -43,7 +44,7 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const response = NextResponse.json({ user: extractUser(body) });
+  const response = NextResponse.json({ user: extractUser(body), mustChangePassword: mustChangePassword(body) });
   const accessToken = applySession(response, setCookies, body);
 
   if (!accessToken) {

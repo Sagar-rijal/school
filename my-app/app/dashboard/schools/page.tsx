@@ -1,22 +1,22 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Alert, PageHeader } from "@/components/form";
 import { EmptyState, Loading, StatusBadge, Table, TBody, TD, TH, THead } from "@/components/data-display";
-import { getAllSchools } from "@/lib/school";
+import { getAllSchools, updateSchool } from "@/lib/school";
 import type { School } from "@/lib/types/school";
-import { getId } from "@/lib/api";
+import { getSchoolId } from "@/lib/types/school";
 import { formatEnum, getErrorMessage } from "@/lib/utils";
 
 const STATUS_TONES = { ACTIVE: "green", INACTIVE: "gray" } as const;
 
-export default function AllSchoolsPage({ searchParams }: { searchParams: Promise<{ created?: string }> }) {
-  const { created } = use(searchParams);
+export default function AllSchoolsPage() {
   const [schools, setSchools] = useState<School[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSchools = () =>
@@ -36,6 +36,24 @@ export default function AllSchoolsPage({ searchParams }: { searchParams: Promise
     return () => document.removeEventListener("visibilitychange", onVisible);
   }, []);
 
+  const toggleSchool = async (school: School) => {
+    const id = getSchoolId(school);
+    if (!id) return;
+    const nextStatus = school.status === 1 ? 0 : 1;
+    if (nextStatus === 0 && !window.confirm(`Disable ${school.school_info.name}? You can enable it again later.`)) return;
+
+    setBusyId(id);
+    setError("");
+    try {
+      const updated = await updateSchool(id, { status: nextStatus });
+      setSchools((current) => current.map((item) => getSchoolId(item) === id ? updated : item));
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to update school status"));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-5xl">
       <PageHeader
@@ -48,7 +66,6 @@ export default function AllSchoolsPage({ searchParams }: { searchParams: Promise
         }
       />
 
-      {created && <div className="mb-4"><Alert type="success">School added successfully.</Alert></div>}
       {error && <div className="mb-4"><Alert type="error">{error}</Alert></div>}
 
       {isLoading ? (
@@ -70,7 +87,7 @@ export default function AllSchoolsPage({ searchParams }: { searchParams: Promise
             </THead>
             <TBody>
               {schools.map((school) => {
-                const id = getId(school);
+                const id = getSchoolId(school);
                 return (
                   <tr key={id || school.school_info?.name} className="hover:bg-muted/30">
                     <TD>
@@ -90,10 +107,15 @@ export default function AllSchoolsPage({ searchParams }: { searchParams: Promise
                     <TD>
                       <StatusBadge value={school.status === 1 ? "ACTIVE" : "INACTIVE"} tones={STATUS_TONES} />
                     </TD>
-                    <TD className="text-right">
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/dashboard/schools/${id}/edit`}>Edit</Link>
-                      </Button>
+                    <TD>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" size="sm" disabled={!id || busyId !== null} onClick={() => toggleSchool(school)} className={school.status === 1 ? "text-red-600 hover:text-red-700" : undefined}>
+                          {busyId === id ? "Saving..." : school.status === 1 ? "Disable" : "Enable"}
+                        </Button>
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={`/dashboard/schools/${id}/edit`}>Edit</Link>
+                        </Button>
+                      </div>
                     </TD>
                   </tr>
                 );

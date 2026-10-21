@@ -43,4 +43,19 @@ export type SchoolPayload = {
 export type School = SchoolPayload & {
   _id?: string;
   id?: string;
+  school_id?: string;
+  onboarded_at?: string;
 };
+
+/** POST /tenant/addSchool creates the school administrator as part of onboarding. */
+export type SchoolCreation = {
+  school: School;
+  admin_user_id: string;
+  admin_email: string;
+  temp_admin_password: string;
+};
+
+/** School URLs use the public school_id returned by the tenant API. */
+export function getSchoolId(school: School): string {
+  return school.school_id ?? school._id ?? school.id ?? "";
+}

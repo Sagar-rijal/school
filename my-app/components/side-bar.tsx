@@ -12,63 +12,64 @@ import {
   BriefcaseBusiness,
   GraduationCap,
   Users,
-  UserPlus,
+  UserCog,
   CalendarCheck,
   IndianRupee,
   ClipboardList,
   Clock,
   UserCircle,
+  KeyRound,
   LogOut,
   Menu,
   X,
   type LucideIcon,
 } from "lucide-react"
 import { logoutUser } from "@/lib/auth"
+import { roleLabel, visibleAreas, type Session } from "@/lib/access"
 import { useAuthStore } from "@/store/useAuthStore"
 
 type NavLink = { href: string; label: string; icon: LucideIcon; exact?: boolean }
 
-// Add a link here as each feature's pages are built
-const groups: { title: string; links: NavLink[] }[] = [
-  {
-    title: "Setup",
-    links: [
-      // exact: /dashboard is the overview, every other page lives under it
-      { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
-      { href: "/dashboard/schools", label: "Schools", icon: School },
-      { href: "/dashboard/academic-years", label: "Academic years", icon: CalendarRange },
-      { href: "/dashboard/classes", label: "Classes", icon: Layers },
-      { href: "/dashboard/subjects", label: "Subjects", icon: BookOpen },
-    ],
-  },
-  {
-    title: "Academics",
-    links: [
-      { href: "/dashboard/attendance", label: "Attendance", icon: CalendarCheck },
-      { href: "/dashboard/timetable", label: "Timetable", icon: Clock },
-      { href: "/dashboard/exams", label: "Exams", icon: ClipboardList },
-    ],
-  },
-  {
-    title: "Finance",
-    links: [
-      { href: "/dashboard/fees", label: "Fees", icon: IndianRupee },
-    ],
-  },
-  {
-    title: "People",
-    links: [
-      { href: "/dashboard/students", label: "Students", icon: GraduationCap },
-      { href: "/dashboard/parents", label: "Parents", icon: Users },
-      { href: "/dashboard/staff", label: "Staff", icon: BriefcaseBusiness },
-      { href: "/dashboard/users", label: "Users & roles", icon: UserPlus },
-    ],
-  },
-]
+// Icon names used in lib/access.ts → components
+const ICONS: Record<string, LucideIcon> = {
+  school: School,
+  "users-cog": UserCog,
+  "calendar-range": CalendarRange,
+  layers: Layers,
+  book: BookOpen,
+  "calendar-check": CalendarCheck,
+  clock: Clock,
+  clipboard: ClipboardList,
+  rupee: IndianRupee,
+  graduation: GraduationCap,
+  users: Users,
+  briefcase: BriefcaseBusiness,
+}
+
+const GROUP_ORDER = ["Platform", "Setup", "Academics", "Finance", "People"] as const
+
+/** Sidebar groups for this user: only areas their role can use, empty groups dropped. */
+function navGroups(session: Session | null): { title: string; links: NavLink[] }[] {
+  // exact: /dashboard is the overview, every other page lives under it
+  const overview: NavLink = { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true }
+  if (!session) return [{ title: "Home", links: [overview] }]
+
+  const areas = visibleAreas(session)
+  const groups = GROUP_ORDER.map((title) => ({
+    title,
+    links: areas
+      .filter((a) => a.group === title)
+      .map((a) => ({ href: a.href, label: a.label, icon: ICONS[a.icon] ?? LayoutDashboard })),
+  })).filter((g) => g.links.length > 0)
+
+  return [{ title: "Home", links: [overview] }, ...groups]
+}
 
 function SidebarContent({
+  session,
   onNavigate,
 }: {
+  session: Session | null
   onNavigate?: () => void
 }) {
   const pathname = usePathname()
@@ -96,23 +97,29 @@ function SidebarContent({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Logo */}
-      <div className="flex items-center gap-3 px-3 py-4 mb-4 border-b">
-        <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
-          </svg>
-        </div>
-        <div className="leading-tight">
-          <p className="text-sm text-muted-foreground font-medium">Admin Panel</p>
-          <p className="text-md font-bold text-foreground">School Management</p>
-        </div>
-      </div>
+      {/* Workspace brand */}
+      <Link
+        href="/dashboard"
+        onClick={onNavigate}
+        className="mb-5 block rounded-2xl border border-sidebar-border bg-gradient-to-br from-sidebar-accent/80 to-sidebar p-3 shadow-sm transition-colors hover:border-sidebar-ring/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sidebar-ring"
+      >
+        <span className="flex items-center gap-2.5">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+            <GraduationCap className="size-5" strokeWidth={2.1} aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1 leading-tight">
+            <span className="block text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Workspace</span>
+            <span className="block whitespace-nowrap text-[13px] font-bold tracking-tight text-sidebar-foreground">School Management</span>
+          </span>
+        </span>
+        <span className="mt-3 block border-t border-sidebar-border pt-2.5 text-xs font-medium text-muted-foreground">
+          {session ? roleLabel(session) : "Admin Panel"}
+        </span>
+      </Link>
 
       {/* Nav Links */}
       <nav className="-mx-1 min-h-0 flex-1 space-y-4 overflow-y-auto px-1">
-        {groups.map((group) => (
+        {navGroups(session).map((group) => (
           <div key={group.title} className="space-y-1">
             <p className="px-3 text-xs font-medium uppercase tracking-wide text-muted-foreground/70">{group.title}</p>
             {group.links.map((link) => {
@@ -157,9 +164,17 @@ function SidebarContent({
             <div className="p-4 space-y-3">
               <div className="text-sm">
                 <p className="text-muted-foreground">Signed in as</p>
-                <p className="font-medium break-all">{user?.email ?? "Unknown user"}</p>
+                <p className="font-medium break-all">{session?.email || user?.email || "Unknown user"}</p>
               </div>
               <div className="border-t pt-3">
+                <Link
+                  href="/dashboard/change-password"
+                  onClick={() => { setOpen(false); onNavigate?.() }}
+                  className="flex items-center gap-2 text-sm hover:bg-accent w-full px-2 py-2 rounded-md"
+                >
+                  <KeyRound className="w-4 h-4" />
+                  Change password
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-2 text-sm text-red-600 hover:bg-red-50 w-full px-2 py-2 rounded-md"
@@ -176,7 +191,7 @@ function SidebarContent({
   )
 }
 
-export default function Sidebar() {
+export default function Sidebar({ session }: { session: Session | null }) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   // Close drawer on route change (navigation)
@@ -198,7 +213,7 @@ export default function Sidebar() {
     <>
       {/* ── DESKTOP SIDEBAR (unchanged) ── */}
       <aside className="hidden md:flex print:hidden w-64 h-screen border-r bg-sidebar p-4 flex-col shrink-0">
-        <SidebarContent />
+        <SidebarContent session={session} />
       </aside>
 
       {/* ── MOBILE TOPBAR ── */}
@@ -212,13 +227,10 @@ export default function Sidebar() {
         </button>
         {/* Logo inline in topbar */}
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-              <path d="M6 12v5c3 3 9 3 12 0v-5"/>
-            </svg>
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+            <GraduationCap className="size-4" strokeWidth={2.1} aria-hidden="true" />
           </div>
-          <span className="font-bold text-sm text-foreground">School Management</span>
+          <span className="text-sm font-bold tracking-tight text-sidebar-foreground">School Management</span>
         </div>
       </div>
 
@@ -246,7 +258,7 @@ export default function Sidebar() {
               <X className="w-5 h-5" />
             </button>
 
-            <SidebarContent onNavigate={handleNavigate} />
+            <SidebarContent session={session} onNavigate={handleNavigate} />
           </aside>
         </div>
       )}

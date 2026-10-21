@@ -3,6 +3,7 @@ import type { LoginPayload } from "./types/user";
 
 export type LoginResult = {
   user: { id?: string; name?: string; email?: string } | null;
+  mustChangePassword: boolean;
 };
 
 /** Logs in via our route handler, which stores the session in httpOnly cookies. */
@@ -18,4 +19,12 @@ export function loginUser(payload: LoginPayload) {
 /** Clears the session cookies (the backend has no logout endpoint). */
 export function logoutUser() {
   return request("/api/auth/logout", { method: "POST", redirectOnUnauthorized: false });
+}
+
+/** Changes the signed-in user's password; the backend refreshes the auth cookies. */
+export function changePassword(current_password: string, new_password: string) {
+  return request("/api/v1/school-backend/auth/change-password", {
+    method: "POST",
+    body: { current_password, new_password },
+  });
 }

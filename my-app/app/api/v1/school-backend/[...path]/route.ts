@@ -15,9 +15,7 @@ import {
  * If the backend says 401, the session is refreshed once and the request retried.
  */
 async function proxy(req: NextRequest) {
-  let path = req.nextUrl.pathname.replace(BACKEND_PREFIX, "");
-  // The backend defines GET /tenant/ with a trailing slash
-  if (path === "/tenant") path = "/tenant/";
+  const path = req.nextUrl.pathname.replace(BACKEND_PREFIX, "");
 
   let url: string;
   try {

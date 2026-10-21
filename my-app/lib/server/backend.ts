@@ -68,6 +68,13 @@ export function extractUser(body: unknown) {
   };
 }
 
+/** Login response flag used when a newly created account must replace its password. */
+export function mustChangePassword(body: unknown): boolean {
+  if (!isObject(body)) return false;
+  const data = isObject(body.data) ? body.data : body;
+  return data.mustChangePassword === true;
+}
+
 /** Top-level and `data` keys only — for checking the response format without logging secrets. */
 export function describeShape(body: unknown) {
   if (!isObject(body)) return typeof body;

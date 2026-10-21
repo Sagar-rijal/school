@@ -6,7 +6,7 @@ import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, Field, PageHeader, Select } from "@/components/form";
-import { getId } from "@/lib/api";
+import { getSchoolId } from "@/lib/types/school";
 import { assignRole, getUserRoles, revokeRole } from "@/lib/roles";
 import { getAllSchools } from "@/lib/school";
 import type { School } from "@/lib/types/school";
@@ -42,7 +42,7 @@ export default function UserRolesPage({ params }: { params: Promise<{ id: string
 
   const schoolName = (id: string | null) => {
     if (!id) return "All schools (platform)";
-    const school = schools?.find((s) => getId(s) === id);
+    const school = schools?.find((s) => getSchoolId(s) === id);
     return school?.school_info?.name ?? id;
   };
 
@@ -150,7 +150,7 @@ export default function UserRolesPage({ params }: { params: Promise<{ id: string
                 <Select id="school_id" value={schoolId} onChange={(e) => setSchoolId(e.target.value)} disabled={!schools}>
                   <option value="">{schools ? "Select a school" : "Loading schools..."}</option>
                   {schools?.map((s) => (
-                    <option key={getId(s)} value={getId(s)}>
+                    <option key={getSchoolId(s)} value={getSchoolId(s)}>
                       {s.school_info?.name}
                     </option>
                   ))}

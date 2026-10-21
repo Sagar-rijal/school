@@ -1,8 +1,8 @@
 import { apiRequest, unwrap } from "./api";
-import type { School, SchoolPayload } from "./types/school";
+import type { School, SchoolCreation, SchoolPayload } from "./types/school";
 
 export async function getAllSchools() {
-  return unwrap<School[]>(await apiRequest("/tenant/"));
+  return unwrap<School[]>(await apiRequest("/tenant"));
 }
 
 export async function getSchool(schoolId: string) {
@@ -10,9 +10,12 @@ export async function getSchool(schoolId: string) {
 }
 
 export async function addSchool(payload: SchoolPayload) {
-  return apiRequest("/tenant/addSchool", { method: "POST", body: payload });
+  return unwrap<SchoolCreation>(await apiRequest("/tenant/addSchool", { method: "POST", body: payload }));
 }
 
 export async function updateSchool(schoolId: string, payload: Partial<SchoolPayload>) {
-  return apiRequest(`/tenant/${schoolId}`, { method: "PUT", body: payload });
+  return unwrap<School>(await apiRequest(`/tenant/${schoolId}`, {
+    method: "PUT",
+    body: payload,
+  }));
 }
