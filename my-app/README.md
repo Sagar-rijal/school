@@ -36,7 +36,7 @@ Browser ──cookie──▶ Next.js route handlers ──token──▶ FastAP
 | --- | --- |
 | `app/api/v1/school-backend/[...path]/route.ts` | Forwards every backend call, attaches the session, refreshes an expired token once and retries |
 | `app/api/auth/login/route.ts` | Logs in and stores tokens in httpOnly cookies (whether the backend returns them as cookies or in the body) |
-| `app/api/auth/logout/route.ts` | Clears the session cookies (the backend has no logout endpoint) |
+| `app/api/auth/logout/route.ts` | Calls the backend logout endpoint and clears local session cookies |
 | `lib/server/backend.ts` | Server-only: token extraction, cookie handling, refresh |
 | `proxy.ts` | Redirects logged-out visitors to `/auth/login` (Next 16's replacement for `middleware.ts`) |
 | `lib/api.ts` | Client-side `apiRequest`: query strings, error messages, expired-session redirect |
@@ -77,8 +77,8 @@ docs/backend-checklist.md   what to verify against the live backend
    Enums become `as const` arrays so the UI can render options from them.
 2. **API functions** in `lib/<feature>.ts` using `apiRequest`. Pages never call `fetch`.
 3. **Components** in `components/<feature>/` — one form shared by create and edit.
-4. **Pages** under `app/dashboard/<feature>/`, then add the sidebar link in
-   `components/side-bar.tsx`.
+4. **Pages** under `app/dashboard/<feature>/`, then add the route and access rule
+   in `lib/access.ts` so the sidebar shows it to the right roles.
 
 Conventions worth keeping:
 
@@ -96,7 +96,7 @@ Conventions worth keeping:
 
 `npm run build` type-checks and `npm run lint` must both pass.
 
-The original features were built against the OpenAPI spec while the backend was offline.
-The super admin school and auth flows now follow the newer Postman collection. Verify
-them with a live backend before relying on onboarding, especially the one-time admin
-credentials shown after creating a school.
+Many school features were built against the OpenAPI spec while the backend was offline.
+The super admin school and auth flows follow the newer Postman collection. Verify
+them against the live backend before relying on onboarding, especially the one-time
+admin credentials shown after creating a school.

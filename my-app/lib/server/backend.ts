@@ -112,8 +112,7 @@ const SESSION_COOKIES = [ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE];
  * backend's host, so the browser rejects it) and forces Path=/. In development,
  * also drops Secure so cookies work on http://localhost.
  *
- * Session cookies are forced to HttpOnly — the backend omits it, which would let any
- * script on the page read the tokens.
+ * Session cookies are forced to HttpOnly, even if a backend response omits it.
  */
 export function sanitizeSetCookie(cookie: string) {
   let parts = cookie

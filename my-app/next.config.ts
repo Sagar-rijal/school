@@ -2,8 +2,7 @@ import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Pin the project root: a stray package-lock.json in the parent folder made
-  // Turbopack treat the whole school/ directory as the app root
+  // Keep the app root stable when this project is run inside the parent repository.
   turbopack: { root: path.join(__dirname) },
 };
 

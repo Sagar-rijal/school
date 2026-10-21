@@ -16,7 +16,7 @@ export function loginUser(payload: LoginPayload) {
   });
 }
 
-/** Clears the session cookies (the backend has no logout endpoint). */
+/** Revokes the backend session and clears the local session cookies. */
 export function logoutUser() {
   return request("/api/auth/logout", { method: "POST", redirectOnUnauthorized: false });
 }
