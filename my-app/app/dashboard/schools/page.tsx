@@ -5,12 +5,14 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Alert, PageHeader } from "@/components/form";
 import { EmptyState, Loading, StatusBadge, Table, TBody, TD, TH, THead } from "@/components/data-display";
-import { getAllSchools, updateSchool } from "@/lib/school";
+import { deleteSchool, getAllSchools, updateSchool } from "@/lib/school";
 import type { School } from "@/lib/types/school";
 import { getSchoolId } from "@/lib/types/school";
 import { formatEnum, getErrorMessage } from "@/lib/utils";
 
 const STATUS_TONES = { ACTIVE: "green", INACTIVE: "gray" } as const;
+// The live backend does not currently expose DELETE /tenant/{school_id}.
+const SCHOOL_DELETION_ENABLED = process.env.NEXT_PUBLIC_SCHOOL_DELETE_ENABLED === "true";
 
 export default function AllSchoolsPage() {
   const [schools, setSchools] = useState<School[]>([]);
@@ -49,6 +51,24 @@ export default function AllSchoolsPage() {
       setSchools((current) => current.map((item) => getSchoolId(item) === id ? updated : item));
     } catch (err) {
       setError(getErrorMessage(err, "Failed to update school status"));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const removeSchool = async (school: School) => {
+    const id = getSchoolId(school);
+    if (!id || school.status !== 0) return;
+    const name = school.school_info.name;
+    if (window.prompt(`Delete ${name} permanently? Type the school name to confirm.`) !== name) return;
+
+    setBusyId(id);
+    setError("");
+    try {
+      await deleteSchool(id);
+      setSchools((current) => current.filter((item) => getSchoolId(item) !== id));
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to delete school"));
     } finally {
       setBusyId(null);
     }
@@ -115,6 +135,11 @@ export default function AllSchoolsPage() {
                         <Button variant="outline" size="sm" asChild>
                           <Link href={`/dashboard/schools/${id}/edit`}>Edit</Link>
                         </Button>
+                        {SCHOOL_DELETION_ENABLED && school.status === 0 && (
+                          <Button variant="destructive" size="sm" disabled={!id || busyId !== null} onClick={() => removeSchool(school)}>
+                            {busyId === id ? "Deleting..." : "Delete"}
+                          </Button>
+                        )}
                       </div>
                     </TD>
                   </tr>

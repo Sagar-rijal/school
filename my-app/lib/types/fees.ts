@@ -97,3 +97,16 @@ export type FeePaymentPayload = {
 };
 
 export type FeePayment = FeePaymentPayload & { _id?: string; id?: string };
+
+// ── Payment evidence review ──
+
+export type PaymentSubmission = Partial<FeePaymentPayload> & {
+  _id?: string;
+  id?: string;
+  submission_id?: string;
+  proof_file_id?: string;
+  status?: string;
+  created_at?: string;
+  reviewer_remarks?: string | null;
+  rejection_reason?: string | null;
+};

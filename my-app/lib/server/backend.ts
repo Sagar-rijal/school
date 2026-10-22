@@ -112,8 +112,7 @@ const SESSION_COOKIES = [ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE];
  * backend's host, so the browser rejects it) and forces Path=/. In development,
  * also drops Secure so cookies work on http://localhost.
  *
- * Session cookies are forced to HttpOnly — the backend omits it, which would let any
- * script on the page read the tokens.
+ * Session cookies are forced to HttpOnly, even if a backend response omits it.
  */
 export function sanitizeSetCookie(cookie: string) {
   let parts = cookie
@@ -197,7 +196,12 @@ export function hasSession(req: NextRequest) {
  */
 export function authHeaders(req: NextRequest, accessTokenOverride?: string) {
   const headers: Record<string, string> = {};
-  const jar = new Map(req.cookies.getAll().map((c) => [c.name, c.value]));
+  // Only backend auth cookies belong in requests to the backend.
+  const jar = new Map(
+    [ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE]
+      .map((name) => [name, req.cookies.get(name)?.value] as const)
+      .filter((entry): entry is readonly [string, string] => !!entry[1])
+  );
   if (accessTokenOverride) jar.set(ACCESS_TOKEN_COOKIE, accessTokenOverride);
 
   if (jar.size > 0) {

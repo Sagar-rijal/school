@@ -1,4 +1,4 @@
-import { apiRequest, unwrap } from "./api";
+import { ApiError, apiRequest, unwrap, unwrapPage } from "./api";
 import type {
   Department,
   DepartmentPayload,
@@ -6,6 +6,8 @@ import type {
   StaffMember,
   StaffPayload,
   StaffUpdatePayload,
+  SalaryChangePayload,
+  SalaryRecord,
 } from "./types/staff";
 
 // ── Departments ──
@@ -66,4 +68,37 @@ export function deleteStaff(staffId: string) {
 
 export async function listTeachersBySubject(subjectId: string) {
   return unwrap<StaffMember[]>(await apiRequest(`/staff/by-subject/${subjectId}`)) ?? [];
+}
+
+// ── Salary ──
+
+export async function getCurrentSalary(staffId: string): Promise<SalaryRecord | null> {
+  try {
+    const value = unwrap<unknown>(await apiRequest(`/staff/${encodeURIComponent(staffId)}/salary`));
+    if (!value || typeof value !== "object") return null;
+    const record = value as Record<string, unknown>;
+    const nested = record.current ?? record.salary ?? record.current_salary;
+    if (nested && typeof nested === "object") {
+      const salary = nested as SalaryRecord;
+      return { ...salary, revision: salary.revision ?? (typeof record.revision === "number" ? record.revision : undefined) };
+    }
+    return "amount" in record || "revision" in record ? record as SalaryRecord : null;
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
+}
+
+export async function getSalaryHistory(staffId: string, after?: string) {
+  return unwrapPage<SalaryRecord>(
+    await apiRequest(`/staff/${encodeURIComponent(staffId)}/salary/history`, { query: { limit: 50, after } })
+  );
+}
+
+export function changeSalary(staffId: string, payload: SalaryChangePayload) {
+  return apiRequest(`/staff/${encodeURIComponent(staffId)}/salary`, {
+    method: "POST",
+    headers: { "Idempotency-Key": crypto.randomUUID() },
+    body: payload,
+  });
 }

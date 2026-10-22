@@ -90,15 +90,24 @@ export const AREAS: Area[] = [
 
   // School — gated by permission
   { href: "/dashboard/academic-years", label: "Academic years", icon: "calendar-range", group: "Setup", rule: { audience: "school", permissions: ["academic:read"] } },
+  { href: "/dashboard/calendar", label: "Calendar", icon: "calendar-range", group: "Setup", rule: { audience: "school", permissions: ["calendar:read", "calendar:manage"] } },
   { href: "/dashboard/classes", label: "Classes", icon: "layers", group: "Setup", rule: { audience: "school", permissions: ["academic:read"] } },
   { href: "/dashboard/subjects", label: "Subjects", icon: "book", group: "Setup", rule: { audience: "school", permissions: ["academic:read"] } },
+  { href: "/dashboard/syllabus", label: "Syllabus", icon: "book", group: "Academics", rule: { audience: "school", permissions: ["syllabus:read", "syllabus:manage"] } },
+  { href: "/dashboard/homework", label: "Homework", icon: "clipboard", group: "Academics", rule: { audience: "school", permissions: ["homework:read", "homework:manage"] } },
+  { href: "/dashboard/materials", label: "Study materials", icon: "book", group: "Academics", rule: { audience: "school", permissions: ["material:read", "material:manage"] } },
+  { href: "/dashboard/notices", label: "Notices", icon: "clipboard", group: "People", rule: { audience: "school", permissions: ["notification:read", "notification:send"] } },
+  { href: "/dashboard/ptm", label: "Parent meetings", icon: "calendar-range", group: "People", rule: { audience: "school", roles: ["SCHOOL_ADMIN"], permissions: ["ptm:manage"] } },
+  { href: "/dashboard/resources", label: "Resources", icon: "layers", group: "Setup", rule: { audience: "school", permissions: ["resource:read", "resource:manage"] } },
   { href: "/dashboard/attendance", label: "Attendance", icon: "calendar-check", group: "Academics", rule: { audience: "school", permissions: ["attendance:read", "attendance:mark"] } },
   { href: "/dashboard/timetable", label: "Timetable", icon: "clock", group: "Academics", rule: { audience: "school", permissions: ["timetable:read"] } },
   { href: "/dashboard/exams", label: "Exams", icon: "clipboard", group: "Academics", rule: { audience: "school", permissions: ["exam:read"] } },
   { href: "/dashboard/fees", label: "Fees", icon: "rupee", group: "Finance", rule: { audience: "school", permissions: ["fee:read"] } },
+  { href: "/dashboard/fees/payment-submissions", label: "Payment reviews", icon: "rupee", group: "Finance", rule: { audience: "school", permissions: ["payment:review"] } },
   { href: "/dashboard/students", label: "Students", icon: "graduation", group: "People", rule: { audience: "school", permissions: ["student:read"] } },
   { href: "/dashboard/parents", label: "Parents", icon: "users", group: "People", rule: { audience: "school", permissions: ["parent:read", "student:read"] } },
   { href: "/dashboard/staff", label: "Staff", icon: "briefcase", group: "People", rule: { audience: "school", permissions: ["staff:read", "user:read"] } },
+  { href: "/dashboard/leaves", label: "Leave requests", icon: "calendar-check", group: "People", rule: { audience: "school", permissions: ["leave:manage"] } },
 ];
 
 /** Pages every signed-in user may open. */
