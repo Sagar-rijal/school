@@ -1,4 +1,4 @@
-import { apiRequest, unwrap } from "./api";
+import { apiRequest, unwrap, unwrapPage } from "./api";
 import type {
   FeeCategory,
   FeeCategoryPayload,
@@ -7,6 +7,7 @@ import type {
   FeeInvoiceUpdatePayload,
   FeePayment,
   FeePaymentPayload,
+  PaymentSubmission,
   FeeStructure,
   FeeStructurePayload,
   FeeStructureUpdatePayload,
@@ -111,11 +112,54 @@ export async function listPaymentsInRange(fromDate: string, toDate: string) {
   return unwrap<FeePayment[]>(res) ?? [];
 }
 
+// ── Payment evidence submitted for review ──
+
+export async function listPendingPaymentSubmissions(after?: string) {
+  return unwrapPage<PaymentSubmission>(
+    await apiRequest("/fees/payment-submissions/pending", { query: { limit: 50, after } })
+  );
+}
+
+export async function getPaymentSubmission(id: string) {
+  return unwrap<PaymentSubmission>(await apiRequest(`/fees/payment-submissions/${encodeURIComponent(id)}`));
+}
+
+export async function reviewPaymentSubmission(id: string, decision: "approve" | "reject", reason?: string) {
+  return apiRequest(`/fees/payment-submissions/${encodeURIComponent(id)}/${decision}`, {
+    method: "POST",
+    body: { reason: reason || null },
+  });
+}
+
 // ── Reports ──
 
 /** Totals invoiced/paid/discount/fine/balance and pending/overdue counts. Shape isn't documented. */
 export async function getStudentFeeSummary(studentId: string) {
   return unwrap<unknown>(await apiRequest(`/fees/report/student/${studentId}`));
+}
+
+export type OutstandingFeeRow = {
+  id?: string;
+  _id?: string;
+  student_id?: string;
+  student_name?: string;
+  admission_number?: string;
+  invoice_id?: string;
+  invoice_number?: string;
+  due_date?: string;
+  amount_due?: number;
+  balance_due?: number;
+  outstanding_amount?: number;
+  total_outstanding?: number;
+};
+
+export async function getOutstandingFeeReport(filters: {
+  academic_year_id?: string;
+  class_id?: string;
+  as_of?: string;
+  after?: string;
+}) {
+  return unwrapPage<OutstandingFeeRow>(await apiRequest("/fees/report/outstanding", { query: { ...filters, limit: 50 } }));
 }
 
 // ── Numbering ──

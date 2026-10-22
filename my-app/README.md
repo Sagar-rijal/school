@@ -22,6 +22,11 @@ BACKEND_URL=https://your-backend-host
 The same variable must be set in the hosting environment (e.g. Vercel project settings).
 Without it, every API call returns "BACKEND_URL is not configured".
 
+School deletion is prepared but hidden while the backend has no `DELETE /tenant/{school_id}` route.
+Once that route atomically rejects active schools, set `NEXT_PUBLIC_SCHOOL_DELETE_ENABLED=true`
+and redeploy to show Delete only for disabled schools. The frontend also checks the current
+school status before sending the request.
+
 Other scripts: `npm run build` (production build, also type-checks), `npm run lint`.
 
 ## How the app talks to the backend

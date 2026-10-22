@@ -8,15 +8,19 @@ import { Alert, PageHeader } from "@/components/form";
 import { Card, DetailList, Loading, StatusBadge } from "@/components/data-display";
 import StaffForm from "@/components/staff/staff-form";
 import TeacherClassesCard from "@/components/staff/teacher-classes-card";
+import SalaryCard from "@/components/staff/salary-card";
+import { useSession } from "@/components/session-provider";
 import { useQuery } from "@/hooks/use-query";
 import { listSubjects } from "@/lib/academic";
 import { deleteStaff, getStaffMember, listDepartments, toStaffUpdate, updateStaff } from "@/lib/staff";
 import { formatDate, formatEnum, fullName, getErrorMessage } from "@/lib/utils";
 import { STAFF_STATUS_TONES } from "@/lib/types/staff";
+import { hasPermission } from "@/lib/access";
 
 export default function StaffMemberPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
+  const session = useSession();
   const member = useQuery(`staff:${id}`, () => getStaffMember(id));
   const departments = useQuery("departments", listDepartments);
   const subjects = useQuery("subjects", async () => (await listSubjects()) ?? []);
@@ -76,6 +80,10 @@ export default function StaffMemberPage({ params }: { params: Promise<{ id: stri
           </Card>
 
           {data.staff_type === "TEACHING" && <TeacherClassesCard userId={data.user_id} />}
+
+          {session && hasPermission(session, "salary:read") && (
+            <SalaryCard staffId={id} canUpdate={hasPermission(session, "salary:update")} />
+          )}
 
           <div>
             <h2 className="mb-3 font-semibold">Edit details</h2>

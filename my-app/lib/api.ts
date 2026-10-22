@@ -132,6 +132,22 @@ export function unwrap<T>(res: unknown): T {
   return res as T;
 }
 
+/** Newer list endpoints may return an array or a cursor page inside `{ data }`. */
+export function unwrapPage<T>(res: unknown): { items: T[]; next: string | null } {
+  const value = unwrap<unknown>(res);
+  if (Array.isArray(value)) return { items: value as T[], next: null };
+  if (!value || typeof value !== "object") throw new ApiError("Unexpected list response from the server.", 502);
+
+  const page = value as Record<string, unknown>;
+  const items = [page.items, page.results, page.records, page.submissions, page.applications, page.events,
+    page.units, page.history, page.resources, page.allocations, page.homework, page.materials,
+    page.versions, page.notifications, page.notices, page.activities, page.slots, page.meetings,
+    page.outstanding, page.invoices].find(Array.isArray);
+  if (!items) throw new ApiError("Unexpected list response from the server.", 502);
+  const cursor = page.next_after ?? page.next_cursor ?? page.next;
+  return { items: items as T[], next: typeof cursor === "string" && cursor ? cursor : null };
+}
+
 /** Finds the new record's id in a create response (`{ data: { _id } }`, `{ id }`, `{ inserted_id }`...). */
 export function findCreatedId(res: unknown): string | undefined {
   const keys = ["_id", "id", "user_id", "inserted_id"];

@@ -66,3 +66,27 @@ export type StaffFilters = {
   staff_type?: string;
   status?: string;
 };
+
+export const PAY_FREQUENCIES = ["MONTHLY", "WEEKLY", "DAILY", "HOURLY", "ANNUAL"] as const;
+export type PayFrequency = (typeof PAY_FREQUENCIES)[number];
+
+export type SalaryRecord = {
+  _id?: string;
+  id?: string;
+  amount?: number | string;
+  currency?: string;
+  frequency?: PayFrequency;
+  effective_at?: string;
+  revision?: number;
+  reason?: string;
+  created_at?: string;
+};
+
+export type SalaryChangePayload = {
+  amount: number;
+  currency: "INR";
+  frequency: PayFrequency;
+  effective_at: string;
+  reason: string;
+  expected_revision: number;
+};

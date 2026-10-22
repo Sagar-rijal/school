@@ -196,7 +196,12 @@ export function hasSession(req: NextRequest) {
  */
 export function authHeaders(req: NextRequest, accessTokenOverride?: string) {
   const headers: Record<string, string> = {};
-  const jar = new Map(req.cookies.getAll().map((c) => [c.name, c.value]));
+  // Only backend auth cookies belong in requests to the backend.
+  const jar = new Map(
+    [ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE]
+      .map((name) => [name, req.cookies.get(name)?.value] as const)
+      .filter((entry): entry is readonly [string, string] => !!entry[1])
+  );
   if (accessTokenOverride) jar.set(ACCESS_TOKEN_COOKIE, accessTokenOverride);
 
   if (jar.size > 0) {

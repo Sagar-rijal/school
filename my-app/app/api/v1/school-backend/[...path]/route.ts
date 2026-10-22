@@ -24,38 +24,68 @@ async function proxy(req: NextRequest) {
     return NextResponse.json({ message: String((err as Error).message) }, { status: 500 });
   }
 
-  const body = req.method !== "GET" && req.method !== "HEAD" ? await req.text() : undefined;
-  const contentType = req.headers.get("content-type");
+  // Preserve raw bytes for file uploads and pass required request metadata through.
+  const body = req.method !== "GET" && req.method !== "HEAD" ? await req.arrayBuffer() : undefined;
+  const forwardedHeaders = Object.fromEntries(
+    ["content-type", "accept", "idempotency-key", "range"]
+      .map((name) => [name, req.headers.get(name)] as const)
+      .filter((entry): entry is readonly [string, string] => !!entry[1])
+  );
 
   const send = (accessToken?: string) =>
     fetch(url, {
       method: req.method,
       headers: {
         ...authHeaders(req, accessToken),
-        ...(contentType ? { "Content-Type": contentType } : {}),
+        ...forwardedHeaders,
       },
       body,
     });
 
   try {
-    let res = await send();
     let refreshed: Awaited<ReturnType<typeof refreshSession>> = null;
 
-    if (res.status === 401 && hasSession(req)) {
+    // A school must still be disabled at request time. The backend must enforce
+    // this atomically as well, since its API can be called outside this proxy.
+    if (req.method === "DELETE" && /^\/tenant\/[^/]+\/?$/.test(path)) {
+      let current = await fetch(url, { method: "GET", headers: authHeaders(req) });
+      if (current.status === 401 && hasSession(req)) {
+        refreshed = await refreshSession(req);
+        if (refreshed) {
+          current = await fetch(url, { method: "GET", headers: authHeaders(req, refreshed.accessToken) });
+        }
+      }
+      if (!current.ok) {
+        const response = NextResponse.json({ message: "Could not verify the school's current status." }, { status: current.status });
+        if (refreshed) applySession(response, refreshed.setCookies, refreshed.body);
+        return response;
+      }
+      const result = await current.json();
+      const school = result && typeof result === "object" && "data" in result ? result.data : result;
+      if (!school || typeof school !== "object" || !("status" in school) || school.status !== 0) {
+        return NextResponse.json({ message: "Only disabled schools can be deleted." }, { status: 409 });
+      }
+    }
+
+    let res = await send(refreshed?.accessToken);
+
+    if (res.status === 401 && hasSession(req) && !refreshed) {
       refreshed = await refreshSession(req);
       if (refreshed) res = await send(refreshed.accessToken);
     }
-
-    const text = await res.text();
 
     if (process.env.NODE_ENV === "development") {
       const note = refreshed ? " (after token refresh)" : "";
       console.log(`[proxy] ${req.method} ${path}${req.nextUrl.search} → ${res.status}${note}`);
     }
 
-    const response = new NextResponse(text || null, {
+    const response = new NextResponse(res.body, {
       status: res.status,
-      headers: { "Content-Type": res.headers.get("content-type") ?? "application/json" },
+      headers: Object.fromEntries(
+        ["content-type", "content-disposition", "cache-control"]
+          .map((name) => [name, res.headers.get(name)] as const)
+          .filter((entry): entry is readonly [string, string] => !!entry[1])
+      ),
     });
 
     if (res.status === 401) {

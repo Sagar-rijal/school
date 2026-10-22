@@ -7,11 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Alert, PageHeader } from "@/components/form";
 import { Card, DetailList, Loading, StatusBadge } from "@/components/data-display";
 import AttendanceCard from "@/components/students/attendance-card";
+import ActivitiesCard from "@/components/students/activities-card";
 import EnrollmentsPanel from "@/components/students/enrollments-panel";
 import FeesCard from "@/components/students/fees-card";
 import ParentsPanel from "@/components/students/parents-panel";
 import ResultsCard from "@/components/students/results-card";
 import { useQuery } from "@/hooks/use-query";
+import { useSession } from "@/components/session-provider";
+import { hasPermission } from "@/lib/access";
 import { deleteStudent, getStudent } from "@/lib/students";
 import { STUDENT_STATUS_TONES } from "@/lib/types/student";
 import { formatDate, formatEnum, fullName, getErrorMessage } from "@/lib/utils";
@@ -26,6 +29,7 @@ export default function StudentProfilePage({
   const { id } = use(params);
   const { enrollFailed } = use(searchParams);
   const router = useRouter();
+  const session = useSession();
   const student = useQuery(`student:${id}`, () => getStudent(id));
   const [deleteError, setDeleteError] = useState("");
 
@@ -93,6 +97,9 @@ export default function StudentProfilePage({
           </div>
 
           <ResultsCard studentId={id} />
+
+          {session && (hasPermission(session, "activity:read") || hasPermission(session, "activity:manage")) &&
+            <ActivitiesCard studentId={id} canManage={hasPermission(session, "activity:manage")} />}
 
           <div className="flex justify-end">
             <Button variant="outline" onClick={handleDelete} className="text-red-600 hover:text-red-700">
