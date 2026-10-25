@@ -1,6 +1,7 @@
 import { apiRequest, unwrap, unwrapPage } from "./api";
 
 export type LeaveStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type LeaveType = "SICK" | "CASUAL" | "EMERGENCY" | "OTHER";
 
 export type LeaveApplication = {
   _id?: string;
@@ -19,6 +20,10 @@ export type LeaveApplication = {
 
 export async function listLeaveApplications(status?: LeaveStatus) {
   return unwrapPage<LeaveApplication>(await apiRequest("/leaves", { query: { status } })).items;
+}
+
+export function applyForLeave(payload: { leave_type: LeaveType; reason: string; start_date: string; end_date: string }) {
+  return apiRequest("/leaves", { method: "POST", body: payload });
 }
 
 export async function getLeaveApplication(id: string) {

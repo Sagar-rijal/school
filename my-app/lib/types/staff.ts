@@ -61,6 +61,12 @@ export type StaffMember = StaffPayload & {
   status?: StaffStatus;
 };
 
+/** POST /staff returns the new record and a password shown only at creation. */
+export type StaffCreation = {
+  staff: StaffMember;
+  temp_password?: string | null;
+};
+
 export type StaffFilters = {
   department_id?: string;
   staff_type?: string;

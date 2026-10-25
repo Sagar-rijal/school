@@ -40,6 +40,11 @@ export function isPlatformUser(s: Session) {
   return s.roles.includes("SUPER_ADMIN") || s.scope === "PLATFORM";
 }
 
+/** A principal who also teaches keeps the principal workspace. */
+export function isTeacherUser(s: Session) {
+  return !isPlatformUser(s) && s.roles.includes("TEACHER") && !s.roles.includes("SCHOOL_ADMIN");
+}
+
 /** Supports exact permissions plus "*" and "module:*" wildcards. */
 export function hasPermission(s: Session, permission: string) {
   const [module] = permission.split(":");
@@ -108,6 +113,14 @@ export const AREAS: Area[] = [
   { href: "/dashboard/parents", label: "Parents", icon: "users", group: "People", rule: { audience: "school", permissions: ["parent:read", "student:read"] } },
   { href: "/dashboard/staff", label: "Staff", icon: "briefcase", group: "People", rule: { audience: "school", permissions: ["staff:read", "user:read"] } },
   { href: "/dashboard/leaves", label: "Leave requests", icon: "calendar-check", group: "People", rule: { audience: "school", permissions: ["leave:manage"] } },
+
+  // Teacher workspace. Class data is loaded using the signed-in user ID.
+  { href: "/dashboard/teacher", label: "My teaching", icon: "graduation", group: "Academics", rule: { audience: "school", roles: ["TEACHER"] } },
+  { href: "/dashboard/teacher/classes", label: "My classes", icon: "layers", group: "Academics", rule: { audience: "school", roles: ["TEACHER"] } },
+  { href: "/dashboard/teacher/schedule", label: "My schedule", icon: "clock", group: "Academics", rule: { audience: "school", roles: ["TEACHER"] } },
+  { href: "/dashboard/teacher/exams", label: "Enter marks", icon: "clipboard", group: "Academics", rule: { audience: "school", permissions: ["exam:marks_entry"] } },
+  { href: "/dashboard/teacher/notices", label: "My notices", icon: "clipboard", group: "People", rule: { audience: "school", permissions: ["notification:read"] } },
+  { href: "/dashboard/teacher/leave", label: "My leave", icon: "calendar-check", group: "People", rule: { audience: "school", permissions: ["leave:apply", "leave:read"] } },
 ];
 
 /** Pages every signed-in user may open. */
@@ -124,13 +137,30 @@ function areaFor(pathname: string) {
 
 export function canOpenPath(s: Session, pathname: string) {
   if (OPEN_PATHS.includes(pathname)) return true;
+  if (isTeacherUser(s)) {
+    const allowed = ["/dashboard/teacher", "/dashboard/attendance", "/dashboard/homework", "/dashboard/materials"];
+    if (/^\/dashboard\/exams\/schedules\/[^/]+\/marks$/.test(pathname)) {
+      return hasPermission(s, "exam:marks_entry");
+    }
+    if (!allowed.some((path) => pathname === path || pathname.startsWith(`${path}/`))) return false;
+  }
   const area = areaFor(pathname);
   // Unknown dashboard paths fall through to Next's 404 rather than a misleading "no access"
   return area ? canAccess(s, area.rule) : true;
 }
 
 export function visibleAreas(s: Session) {
-  return AREAS.filter((a) => canAccess(s, a.rule));
+  if (isTeacherUser(s)) {
+    const teacherPaths = new Set([
+      "/dashboard/teacher", "/dashboard/teacher/classes", "/dashboard/teacher/schedule",
+      "/dashboard/teacher/exams", "/dashboard/teacher/notices", "/dashboard/teacher/leave",
+      "/dashboard/attendance", "/dashboard/homework", "/dashboard/materials",
+    ]);
+    const order = [...teacherPaths];
+    return AREAS.filter((a) => teacherPaths.has(a.href) && canAccess(s, a.rule))
+      .sort((a, b) => order.indexOf(a.href) - order.indexOf(b.href));
+  }
+  return AREAS.filter((a) => !a.href.startsWith("/dashboard/teacher") && canAccess(s, a.rule));
 }
 
 /** "SCHOOL_ADMIN" → "School admin", for the sidebar badge. */

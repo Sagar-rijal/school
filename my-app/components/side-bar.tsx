@@ -25,7 +25,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { logoutUser } from "@/lib/auth"
-import { roleLabel, visibleAreas, type Session } from "@/lib/access"
+import { isTeacherUser, roleLabel, visibleAreas, type Session } from "@/lib/access"
 import { useAuthStore } from "@/store/useAuthStore"
 
 type NavLink = { href: string; label: string; icon: LucideIcon; exact?: boolean }
@@ -51,7 +51,7 @@ const GROUP_ORDER = ["Platform", "Setup", "Academics", "Finance", "People"] as c
 /** Sidebar groups for this user: only areas their role can use, empty groups dropped. */
 function navGroups(session: Session | null): { title: string; links: NavLink[] }[] {
   // exact: /dashboard is the overview, every other page lives under it
-  const overview: NavLink = { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true }
+  const overview: NavLink = { href: "/dashboard", label: session && isTeacherUser(session) ? "My day" : "Overview", icon: LayoutDashboard, exact: true }
   if (!session) return [{ title: "Home", links: [overview] }]
 
   const areas = visibleAreas(session)
@@ -59,7 +59,7 @@ function navGroups(session: Session | null): { title: string; links: NavLink[] }
     title,
     links: areas
       .filter((a) => a.group === title)
-      .map((a) => ({ href: a.href, label: a.label, icon: ICONS[a.icon] ?? LayoutDashboard })),
+      .map((a) => ({ href: a.href, label: a.label, icon: ICONS[a.icon] ?? LayoutDashboard, exact: a.href === "/dashboard/teacher" })),
   })).filter((g) => g.links.length > 0)
 
   return [{ title: "Home", links: [overview] }, ...groups]

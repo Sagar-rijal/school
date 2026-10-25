@@ -30,6 +30,28 @@ export type Notice = TextNoticePayload & {
   sent_at?: string;
 };
 
+export type InboxNotice = {
+  id?: string;
+  _id?: string;
+  notification_id?: string;
+  title?: string;
+  message?: string;
+  importance?: Importance;
+  created_at?: string;
+  sent_at?: string;
+  read_at?: string | null;
+  is_read?: boolean;
+  notification?: { title?: string; message?: string; importance?: Importance };
+};
+
+export async function listInboxNotices(after?: string) {
+  return unwrapPage<InboxNotice>(await apiRequest("/notifications/inbox", { query: { limit: 50, after } }));
+}
+
+export function markNoticeRead(notificationId: string) {
+  return apiRequest(`/notifications/${encodeURIComponent(notificationId)}/read`, { method: "PUT" });
+}
+
 export async function listSentNotices(after?: string, status?: string) {
   return unwrapPage<Notice>(await apiRequest("/notifications/sent", { query: { limit: 50, after, status } }));
 }

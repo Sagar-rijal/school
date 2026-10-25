@@ -4,6 +4,7 @@ import type {
   DepartmentPayload,
   StaffFilters,
   StaffMember,
+  StaffCreation,
   StaffPayload,
   StaffUpdatePayload,
   SalaryChangePayload,
@@ -34,6 +35,8 @@ export function deleteDepartment(deptId: string) {
 export function toStaffCreate(result: StaffPayload & { status?: unknown }): StaffPayload {
   const payload = { ...result };
   delete payload.status;
+  // Let POST /staff create and link the login account in one operation.
+  delete payload.user_id;
   return payload;
 }
 
@@ -54,8 +57,10 @@ export async function getStaffMember(staffId: string) {
   return unwrap<StaffMember>(await apiRequest(`/staff/${staffId}`));
 }
 
-export function createStaff(payload: StaffPayload) {
-  return apiRequest("/staff", { method: "POST", body: payload });
+export async function createStaff(payload: StaffPayload): Promise<StaffCreation> {
+  const result = unwrap<StaffCreation | StaffMember>(await apiRequest("/staff", { method: "POST", body: payload }));
+  if (result && typeof result === "object" && "staff" in result) return result;
+  return { staff: result as StaffMember, temp_password: null };
 }
 
 export function updateStaff(staffId: string, payload: StaffUpdatePayload) {
