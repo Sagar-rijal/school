@@ -10,6 +10,9 @@ import ClassSectionPicker from "@/components/class-section-picker";
 import { useAcademicYears } from "@/hooks/use-academic-years";
 import { useQuery } from "@/hooks/use-query";
 import { useUrlFilters } from "@/hooks/use-url-filters";
+import { matchesAssignment, useTeacherAssignments } from "@/hooks/use-teacher-assignments";
+import { useSession } from "@/components/session-provider";
+import { hasPermission } from "@/lib/access";
 import { getClassAttendance, getClassAttendanceSummary, markAttendanceBulk } from "@/lib/attendance";
 import { listPeriods } from "@/lib/timetable";
 import { getRoster, studentLabel } from "@/lib/students";
@@ -36,12 +39,19 @@ export default function AttendancePage({ searchParams }: { searchParams: Promise
   const filters = use(searchParams);
   const setFilters = useUrlFilters("/dashboard/attendance", filters);
   const { years, defaultYearId } = useAcademicYears();
+  const session = useSession();
+  const teacherAssignments = useTeacherAssignments();
+  const canMark = !!session && hasPermission(session, "attendance:mark");
 
-  const year = filters.year || defaultYearId;
+  const year = filters.year || (teacherAssignments.teacher
+    ? teacherAssignments.assignments.find((item) => item.academic_year_id === defaultYearId)?.academic_year_id
+      || teacherAssignments.assignments[0]?.academic_year_id || defaultYearId
+    : defaultYearId);
   const date = filters.date || todayInput();
   const type: AttendanceType = filters.type === "PERIOD" ? "PERIOD" : "DAILY";
   const period = type === "PERIOD" && filters.period ? Number(filters.period) : null;
-  const ready = !!(year && filters.class && filters.section && (type === "DAILY" || period));
+  const assigned = !teacherAssignments.teacher || matchesAssignment(teacherAssignments.assignments, year, filters.class ?? "", filters.section ?? "");
+  const ready = !!(year && filters.class && filters.section && assigned && (type === "DAILY" || period));
   const loadKey = ready ? `attendance:${year}:${filters.class}:${filters.section}:${date}:${type}:${period}` : null;
 
   // Period definitions let the user pick a named period instead of typing a number
@@ -109,7 +119,7 @@ export default function AttendancePage({ searchParams }: { searchParams: Promise
       : "";
 
   const handleSave = async () => {
-    if (!ready) return;
+    if (!ready || !canMark) return;
     if (unmarked > 0) {
       setError(`Mark every student before saving (${unmarked} left).`);
       return;
@@ -151,6 +161,7 @@ export default function AttendancePage({ searchParams }: { searchParams: Promise
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <ClassSectionPicker
           years={years}
+          allowedAssignments={teacherAssignments.teacher ? teacherAssignments.assignments : undefined}
           value={{ year, class: filters.class ?? "", section: filters.section ?? "" }}
           onChange={(v) => setFilters({ year: v.year, class: v.class, section: v.section })}
         />
@@ -195,7 +206,8 @@ export default function AttendancePage({ searchParams }: { searchParams: Promise
           ))}
       </div>
 
-      {!ready ? (
+      {teacherAssignments.error && <Alert type="error">{teacherAssignments.error}</Alert>}
+      {teacherAssignments.loading ? <Loading>Loading your classes...</Loading> : !assigned && filters.class && filters.section ? <Alert type="error">This class is not assigned to you.</Alert> : !ready ? (
         <EmptyState>
           Select a class and section{type === "PERIOD" ? " and a period" : ""} to take attendance.
         </EmptyState>
@@ -206,9 +218,7 @@ export default function AttendancePage({ searchParams }: { searchParams: Promise
       ) : roster.length === 0 ? (
         <EmptyState>
           No students are enrolled in this section.{" "}
-          <Link href={`/dashboard/students?year=${year}&class=${filters.class}&section=${filters.section}`} className="underline">
-            View students
-          </Link>
+          {!teacherAssignments.teacher && <Link href={`/dashboard/students?year=${year}&class=${filters.class}&section=${filters.section}`} className="underline">View students</Link>}
         </EmptyState>
       ) : (
         <div className="space-y-4">
@@ -225,10 +235,10 @@ export default function AttendancePage({ searchParams }: { searchParams: Promise
               {type === "PERIOD" ? ` · Period ${period}` : ""} · {roster.length} students
               {alreadySaved && !isDirty && " · Saved earlier — changes will overwrite it"}
             </p>
-            <div className="flex gap-2">
+            {canMark && <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => markAll("PRESENT")}>All present</Button>
               <Button variant="outline" size="sm" onClick={() => markAll("HOLIDAY")}>Holiday</Button>
-            </div>
+            </div>}
           </div>
 
           <Table>
@@ -257,6 +267,7 @@ export default function AttendancePage({ searchParams }: { searchParams: Promise
                             aria-label={formatEnum(s)}
                             aria-pressed={mark?.status === s}
                             onClick={() => setStatus(studentId, s)}
+                            disabled={!canMark}
                             className={cn(
                               "size-8 rounded-md border text-xs font-semibold transition-colors",
                               mark?.status === s ? STATUS_STYLES[s].active : "text-muted-foreground hover:bg-accent"
@@ -272,6 +283,7 @@ export default function AttendancePage({ searchParams }: { searchParams: Promise
                         aria-label={`Remarks for ${studentLabel(student)}`}
                         value={mark?.remarks ?? ""}
                         onChange={(e) => updateMarks((m) => ({ ...m, [studentId]: { ...m[studentId], remarks: e.target.value } }))}
+                        disabled={!canMark}
                         className="h-8 min-w-40"
                       />
                     </TD>
@@ -286,12 +298,12 @@ export default function AttendancePage({ searchParams }: { searchParams: Promise
           {error && <Alert type="error">{error}</Alert>}
           {savedAt && <Alert type="success">Attendance saved at {savedAt}.</Alert>}
 
-          <div className="sticky bottom-0 -mx-1 flex items-center justify-end gap-3 bg-gradient-to-t from-background via-background px-1 py-3">
+          {canMark && <div className="sticky bottom-0 -mx-1 flex items-center justify-end gap-3 bg-gradient-to-t from-background via-background px-1 py-3">
             {isDirty && <span className="text-sm text-muted-foreground">Unsaved changes</span>}
             <Button onClick={handleSave} disabled={saving || (!isDirty && alreadySaved)}>
               {saving ? "Saving..." : "Save attendance"}
             </Button>
-          </div>
+          </div>}
         </div>
       )}
     </div>

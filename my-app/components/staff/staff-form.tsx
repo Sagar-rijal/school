@@ -171,8 +171,8 @@ export default function StaffForm({ departments, subjects, initialData, submitLa
       </FormSection>
 
       <FormSection title="Employment">
-        <Field label="Employee ID" htmlFor="employee_id" required hint={lockedHint}>
-          <Input id="employee_id" name="employee_id" required disabled={isEdit} value={form.employee_id} onChange={handleChange} />
+        <Field label="Employee ID" htmlFor="employee_id" hint={isEdit ? lockedHint : "Optional; the school will generate one if left blank."}>
+          <Input id="employee_id" name="employee_id" disabled={isEdit} value={form.employee_id} onChange={handleChange} />
         </Field>
         <Field label="Staff type" htmlFor="staff_type" required hint={lockedHint}>
           <Select id="staff_type" name="staff_type" disabled={isEdit} value={form.staff_type} onChange={handleChange}>
@@ -250,21 +250,25 @@ export default function StaffForm({ departments, subjects, initialData, submitLa
         </Button>
       </fieldset>
 
-      <FormSection title="Login account">
+      {isEdit ? <FormSection title="Login account">
         <Field
           label="User ID"
           htmlFor="user_id"
-          hint="The staff member's login account. Teachers need one to be assigned to classes."
+          hint={form.user_id ? "This account was linked during onboarding. Use it when assigning this teacher to classes." : "Link an existing login account to this staff member."}
           className="md:col-span-2"
         >
           <div className="flex gap-2">
-            <Input id="user_id" name="user_id" className="font-mono" value={form.user_id} onChange={handleChange} />
-            <Button type="button" variant="outline" asChild>
+            <Input id="user_id" name="user_id" className="font-mono" value={form.user_id} onChange={handleChange} disabled={!!initialData?.user_id} />
+            {!form.user_id && <Button type="button" variant="outline" asChild>
               <Link href="/dashboard/users/new" target="_blank">Create user</Link>
-            </Button>
+            </Button>}
           </div>
         </Field>
-      </FormSection>
+      </FormSection> : (
+        <p className="rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
+          A login account is created with this staff record. The temporary password appears once after saving.
+        </p>
+      )}
 
       {error && <Alert type="error">{error}</Alert>}
 
