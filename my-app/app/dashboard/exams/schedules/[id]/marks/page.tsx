@@ -8,6 +8,7 @@ import { Alert, PageHeader } from "@/components/form";
 import { EmptyState, Loading, StatTile, StatusBadge, Table, TBody, TD, TH, THead } from "@/components/data-display";
 import { useAcademicLookup } from "@/hooks/use-academic-lookup";
 import { useQuery } from "@/hooks/use-query";
+import { useTeacherAssignments } from "@/hooks/use-teacher-assignments";
 import { enterBulkMarks, getExamResults, getExamSchedule, resultPassed } from "@/lib/exams";
 import { getRoster, studentLabel } from "@/lib/students";
 import { EXAM_STATUS_TONES, type ExamResult, type MarksEntry } from "@/lib/types/exams";
@@ -18,14 +19,21 @@ type Row = { marks: string; absent: boolean; exempt: boolean; remarks: string };
 export default function ExamMarksPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const lookup = useAcademicLookup();
+  const teacherAssignments = useTeacherAssignments();
   const exam = useQuery(`exam:${id}`, () => getExamSchedule(id));
   const e = exam.data;
+  const mySections = e ? [...new Set(teacherAssignments.assignments.filter((item) =>
+    item.academic_year_id === e.academic_year_id && item.class_id === e.class_id &&
+    (!item.subject_id || item.subject_id === e.subject_id) &&
+    (!e.section_id || item.section_id === e.section_id)).map((item) => item.section_id))] : [];
+  const allowed = !teacherAssignments.teacher || mySections.length > 0;
 
-  const sheetKey = e ? `marks:${id}` : null;
+  const sheetKey = e && !teacherAssignments.loading && allowed ? `marks:${id}` : null;
   const sheet = useQuery(sheetKey, async () => {
     const [roster, results] = await Promise.all([
-      // An exam without a section covers every section of the class
-      getRoster(e!.academic_year_id, e!.class_id, e!.section_id ?? undefined),
+      teacherAssignments.teacher
+        ? Promise.all(mySections.map((section) => getRoster(e!.academic_year_id, e!.class_id, section))).then((groups) => groups.flat())
+        : getRoster(e!.academic_year_id, e!.class_id, e!.section_id ?? undefined),
       getExamResults(id),
     ]);
     return { roster, results };
@@ -83,7 +91,7 @@ export default function ExamMarksPage({ params }: { params: Promise<{ id: string
   const passing = scored.filter((r) => Number(r.marks) >= (e?.passing_marks ?? 0)).length;
 
   const handleSave = async () => {
-    if (!e) return;
+    if (!e || !allowed) return;
     if (invalid.length) {
       setError(`Marks must be between 0 and ${max} (${invalid.length} invalid).`);
       return;
@@ -131,18 +139,18 @@ export default function ExamMarksPage({ params }: { params: Promise<{ id: string
             ? `${lookup.subjectName(e.subject_id)} · ${lookup.className(e.class_id)}${e.section_id ? ` ${lookup.sectionName(e.section_id)}` : " (all sections)"} · ${formatDate(e.exam_date)} · Max ${e.max_marks}, pass ${e.passing_marks}`
             : undefined
         }
-        backHref="/dashboard/exams/schedules"
+        backHref={teacherAssignments.teacher ? "/dashboard/teacher/exams" : "/dashboard/exams/schedules"}
         action={e && <StatusBadge value={e.status ?? "SCHEDULED"} tones={EXAM_STATUS_TONES} />}
       />
 
-      {(exam.error || sheet.error) && <Alert type="error">{exam.error || sheet.error}</Alert>}
+      {(exam.error || teacherAssignments.error || sheet.error) && <Alert type="error">{exam.error || teacherAssignments.error || sheet.error}</Alert>}
 
-      {exam.loading || sheet.loading ? (
+      {teacherAssignments.teacher && e && !teacherAssignments.loading && !allowed ? <Alert type="error">This exam is not assigned to you.</Alert> : exam.loading || teacherAssignments.loading || sheet.loading ? (
         <Loading>Loading students...</Loading>
       ) : !e ? null : roster.length === 0 ? (
         <EmptyState>
           No students enrolled for this exam&apos;s class.{" "}
-          <Link href={`/dashboard/students?year=${e.academic_year_id}&class=${e.class_id}`} className="underline">View students</Link>
+          {!teacherAssignments.teacher && <Link href={`/dashboard/students?year=${e.academic_year_id}&class=${e.class_id}`} className="underline">View students</Link>}
         </EmptyState>
       ) : (
         <>

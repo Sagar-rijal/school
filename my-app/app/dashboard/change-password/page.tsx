@@ -6,17 +6,18 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, Field, PageHeader } from "@/components/form";
-import { changePassword } from "@/lib/auth";
+import { changePassword, logoutUser } from "@/lib/auth";
+import { useAuthStore } from "@/store/useAuthStore";
 import { getErrorMessage } from "@/lib/utils";
 
 export default function ChangePasswordPage() {
   const router = useRouter();
+  const clearAuthUser = useAuthStore((state) => state.clearAuthUser);
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
 
   const submit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -36,8 +37,9 @@ export default function ChangePasswordPage() {
       setCurrent("");
       setNext("");
       setConfirm("");
-      setSaved(true);
-      router.refresh();
+      try { await logoutUser(); } catch { /* The backend has already revoked the session. */ }
+      clearAuthUser();
+      router.replace("/auth/login?passwordChanged=1");
     } catch (err) {
       setError(getErrorMessage(err, "Could not change password"));
     } finally {
@@ -59,7 +61,6 @@ export default function ChangePasswordPage() {
           <Input id="confirm" type="password" autoComplete="new-password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} />
         </Field>
         {error && <Alert type="error">{error}</Alert>}
-        {saved && <Alert type="success">Password changed successfully.</Alert>}
         <Button type="submit" disabled={busy}>{busy ? "Updating..." : "Update password"}</Button>
       </form>
     </div>

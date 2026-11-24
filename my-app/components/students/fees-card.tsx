@@ -6,8 +6,9 @@ import { Alert } from "@/components/form";
 import { Card, EmptyState, Loading, NumberStats, StatusBadge } from "@/components/data-display";
 import { useQuery } from "@/hooks/use-query";
 import { getId } from "@/lib/api";
-import { getStudentFeeSummary, invoiceAmounts, listPaymentsByStudent, listStudentInvoices } from "@/lib/fees";
+import { getStudentFeeSummary, invoiceAmounts, listPaymentsByStudent, listStudentInvoices, listStudentPaymentSubmissions } from "@/lib/fees";
 import { INVOICE_STATUS_TONES } from "@/lib/types/fees";
+import { fileContentUrl } from "@/lib/files";
 import { formatCurrency, formatDate, formatEnum } from "@/lib/utils";
 
 /** Fee summary and invoices for a student. */
@@ -15,6 +16,7 @@ export default function FeesCard({ studentId }: { studentId: string }) {
   const summary = useQuery(`fee-summary:${studentId}`, () => getStudentFeeSummary(studentId));
   const invoices = useQuery(`student-invoices:${studentId}`, () => listStudentInvoices(studentId));
   const payments = useQuery(`student-payments:${studentId}`, () => listPaymentsByStudent(studentId));
+  const submissions = useQuery(`student-payment-submissions:${studentId}`, () => listStudentPaymentSubmissions(studentId));
   const recentPayments = [...(payments.data ?? [])].sort((a, b) => b.payment_date.localeCompare(a.payment_date)).slice(0, 5);
 
   return (
@@ -54,6 +56,24 @@ export default function FeesCard({ studentId }: { studentId: string }) {
               </li>
             ))}
           </ul>
+        )}
+
+        {(submissions.data?.items.length ?? 0) > 0 && (
+          <div>
+            <p className="mb-2 text-sm font-medium">Payment proofs from family</p>
+            <ul className="divide-y rounded-md border text-sm">
+              {submissions.data!.items.map((s, i) => (
+                <li key={getId(s) || s.submission_id || i} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+                  <span>
+                    <Link href={`/dashboard/fees/payment-submissions/${getId(s) || s.submission_id}`} className="text-link hover:underline">{formatCurrency(s.amount_paid)}</Link>
+                    <span className="text-muted-foreground"> · {formatDate(s.payment_date ?? s.created_at)}</span>
+                    {s.proof_file_id && <> · <a href={fileContentUrl(s.proof_file_id)} target="_blank" rel="noopener noreferrer" className="text-link hover:underline">Proof</a></>}
+                  </span>
+                  <StatusBadge value={s.status ?? "PENDING"} tones={{ PENDING: "yellow", APPROVED: "green", REJECTED: "red" }} />
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
 
         {recentPayments.length > 0 && (

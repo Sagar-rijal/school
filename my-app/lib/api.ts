@@ -80,16 +80,20 @@ export async function request<T = unknown>(
 ): Promise<T> {
   const url = `${path}${buildQuery(options.query)}`;
 
+  // Files (uploads) are sent as raw bytes with their own type; everything else as JSON.
+  const raw = typeof Blob !== "undefined" && options.body instanceof Blob ? options.body : undefined;
+  const contentType = raw ? raw.type || "application/octet-stream" : "application/json";
+
   let response: Response;
   try {
     response = await fetch(url, {
       method: options.method || "GET",
       headers: {
-        ...(options.body !== undefined ? { "Content-Type": "application/json" } : {}),
+        ...(options.body !== undefined ? { "Content-Type": contentType } : {}),
         ...(options.headers || {}),
       },
       credentials: "include",
-      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      body: raw ?? (options.body !== undefined ? JSON.stringify(options.body) : undefined),
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
   } catch (err) {

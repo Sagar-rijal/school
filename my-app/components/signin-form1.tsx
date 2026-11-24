@@ -7,10 +7,11 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert } from "@/components/form";
 import { loginUser } from "@/lib/auth";
 import { useAuthStore } from "@/store/useAuthStore";
 
-export default function SignInForm({ redirectTo = "/dashboard" }: { redirectTo?: string }) {
+export default function SignInForm({ redirectTo = "/dashboard", passwordChanged = false }: { redirectTo?: string; passwordChanged?: boolean }) {
   const router = useRouter();
   const setAuthUser = useAuthStore((s) => s.setAuthUser);
 
@@ -61,6 +62,7 @@ export default function SignInForm({ redirectTo = "/dashboard" }: { redirectTo?:
   return (
     <section className="flex min-h-dvh w-full flex-col items-center justify-center bg-background px-4 py-8 sm:px-6 lg:px-8">
       <div className="w-full max-w-md rounded-xl border bg-card p-6 sm:p-10">
+        {passwordChanged && <div className="mb-5"><Alert type="success">Password changed. Sign in with your new password.</Alert></div>}
         
         <div className="mb-10 flex flex-col items-center space-y-5 text-center">
           <div className="flex size-12 items-center justify-center rounded-xl bg-primary">

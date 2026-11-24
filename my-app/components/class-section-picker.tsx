@@ -6,6 +6,7 @@ import { useQuery } from "@/hooks/use-query";
 import { listClasses, listSections } from "@/lib/academic";
 import { getId } from "@/lib/api";
 import type { AcademicYear } from "@/lib/types/academic";
+import type { TeacherAssignment } from "@/lib/types/academic";
 import { byDisplayOrder, cn } from "@/lib/utils";
 
 export type ClassSectionValue = { year: string; class: string; section: string };
@@ -20,6 +21,7 @@ type Props = {
   /** Hide the section select (for pages that work per class). */
   hideSection?: boolean;
   className?: string;
+  allowedAssignments?: TeacherAssignment[];
 };
 
 /** Year → class → section selects. Changing a parent clears its children. */
@@ -31,6 +33,7 @@ export default function ClassSectionPicker({
   sectionPlaceholder = "Select section",
   hideSection,
   className,
+  allowedAssignments,
 }: Props) {
   const classes = useQuery(value.year ? `classes:${value.year}` : null, async () =>
     [...((await listClasses({ academic_year_id: value.year })) ?? [])].sort(byDisplayOrder)
@@ -41,11 +44,18 @@ export default function ClassSectionPicker({
     )
   );
 
+  const permittedClasses = allowedAssignments
+    ? classes.data?.filter((item) => allowedAssignments.some((assignment) => assignment.academic_year_id === value.year && assignment.class_id === getId(item)))
+    : classes.data;
+  const permittedSections = allowedAssignments
+    ? sections.data?.filter((item) => allowedAssignments.some((assignment) => assignment.academic_year_id === value.year && assignment.class_id === value.class && assignment.section_id === getId(item)))
+    : sections.data;
+
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
       <AcademicYearSelect
         id="picker-year"
-        years={years}
+        years={allowedAssignments ? years.filter((item) => allowedAssignments.some((assignment) => assignment.academic_year_id === getId(item))) : years}
         value={value.year}
         onChange={(year) => onChange({ year, class: "", section: "" })}
         className="w-auto min-w-36"
@@ -58,7 +68,7 @@ export default function ClassSectionPicker({
         className="w-auto min-w-36"
       >
         <option value="">{classes.loading ? "Loading classes..." : classPlaceholder}</option>
-        {classes.data?.map((c) => (
+        {permittedClasses?.map((c) => (
           <option key={getId(c)} value={getId(c)}>
             {c.name}
           </option>
@@ -73,7 +83,7 @@ export default function ClassSectionPicker({
           className="w-auto min-w-36"
         >
           <option value="">{sections.loading ? "Loading sections..." : sectionPlaceholder}</option>
-          {sections.data?.map((s) => (
+          {permittedSections?.map((s) => (
             <option key={getId(s)} value={getId(s)}>
               Section {s.name}
             </option>

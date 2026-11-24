@@ -149,3 +149,66 @@ export async function getRoster(academicYearId: string, classId: string, section
 export function studentLabel(student: Student) {
   return fullName(student) || student.admission_number || "Unknown student";
 }
+
+// ── Roll numbers (policies and per-enrollment assignments) ──
+
+export const ROLL_UNIQUE_SCOPES = ["SECTION", "CLASS", "SCHOOL"] as const;
+
+export type RollPolicy = {
+  id?: string;
+  _id?: string;
+  academic_year_id: string;
+  class_id: string;
+  roll_type: string;
+  context?: Record<string, string>;
+  unique_scope?: (typeof ROLL_UNIQUE_SCOPES)[number];
+  enabled?: boolean;
+  reason?: string;
+  created_at?: string;
+};
+
+export type StudentRoll = {
+  id?: string;
+  _id?: string;
+  enrollment_id?: string;
+  academic_year_id?: string;
+  class_id?: string;
+  section_id?: string;
+  roll_type?: string;
+  value?: string | null;
+  context?: Record<string, string>;
+  updated_at?: string;
+};
+
+export async function listRollPolicies(filters: { academic_year_id?: string; class_id?: string } = {}) {
+  const value = unwrap<unknown>(await apiRequest("/students/roll-policies", { query: filters }));
+  if (Array.isArray(value)) return value as RollPolicy[];
+  const page = (value ?? {}) as { items?: RollPolicy[]; policies?: RollPolicy[] };
+  return page.items ?? page.policies ?? [];
+}
+
+export function configureRollPolicy(payload: Omit<RollPolicy, "id" | "_id" | "created_at"> & { reason: string }) {
+  return apiRequest("/students/roll-policies", { method: "POST", body: payload });
+}
+
+/** Shows what migrating legacy roll numbers into the policy model would change. Read-only. */
+export async function previewLegacyRollMigration() {
+  return unwrap<unknown>(await apiRequest("/students/roll-migration/dry-run"));
+}
+
+export async function getStudentRolls(studentId: string) {
+  const value = unwrap<unknown>(await apiRequest(`/students/${studentId}/rolls`));
+  if (Array.isArray(value)) return value as StudentRoll[];
+  const page = (value ?? {}) as { items?: StudentRoll[]; rolls?: StudentRoll[] };
+  return page.items ?? page.rolls ?? [];
+}
+
+/** value null clears the roll. A reason is required for the audit trail. */
+export function changeStudentRoll(enrollmentId: string, payload: { roll_type: string; value: string | null; reason: string; context?: Record<string, string> }) {
+  return apiRequest(`/students/enrollments/${enrollmentId}/rolls`, { method: "PUT", body: payload });
+}
+
+/** Student with enrollments, parents and related details in one response. */
+export async function getStudentDetails(studentId: string) {
+  return unwrap<Record<string, unknown>>(await apiRequest(`/students/${studentId}/details`));
+}

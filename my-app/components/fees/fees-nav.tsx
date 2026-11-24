@@ -13,6 +13,8 @@ export default function FeesNav() {
         { href: "/dashboard/fees/invoices", label: "Invoices" },
         { href: "/dashboard/fees/collections", label: "Collections" },
         { href: "/dashboard/fees/outstanding", label: "Outstanding" },
+        { href: "/dashboard/fees/reminders", label: "Reminders & statements" },
+        { href: "/dashboard/fees/charges", label: "Extra charges" },
         ...(session && hasPermission(session, "payment:review")
           ? [{ href: "/dashboard/fees/payment-submissions", label: "Payment reviews" }]
           : []),

@@ -9,6 +9,7 @@ import { Card, EmptyState, Loading, Table, TBody, TD, TH, THead } from "@/compon
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@/hooks/use-query";
+import { matchesAssignment, useTeacherAssignments } from "@/hooks/use-teacher-assignments";
 import { hasPermission } from "@/lib/access";
 import { getId } from "@/lib/api";
 import { deleteHomework, getHomework, gradeHomeworkSubmission, listHomeworkSubmissions, type HomeworkSubmission } from "@/lib/homework";
@@ -41,22 +42,26 @@ export default function HomeworkDetailPage({ params }: { params: Promise<{ id: s
   const { id } = use(params);
   const router = useRouter();
   const session = useSession();
+  const teacherAssignments = useTeacherAssignments();
   const homework = useQuery(`homework-detail:${id}`, () => getHomework(id));
-  const submissions = useQuery(`homework-submissions:${id}`, () => listHomeworkSubmissions(id));
+  const item = homework.data;
+  const assigned = !teacherAssignments.teacher || !!item && matchesAssignment(teacherAssignments.assignments, item.academic_year_id, item.class_id, item.section_id, item.subject_id);
+  const submissions = useQuery(item && !teacherAssignments.loading && assigned ? `homework-submissions:${id}` : null, () => listHomeworkSubmissions(id));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const canManage = session ? hasPermission(session, "homework:manage") : false;
+  const canManage = !!session && hasPermission(session, "homework:manage") && assigned;
   const remove = async () => {
-    if (!window.confirm("Delete this assignment and its submissions?")) return;
+    if (!canManage || !window.confirm("Delete this assignment and its submissions?")) return;
     setBusy(true); setError("");
     try { await deleteHomework(id); router.push("/dashboard/homework"); }
     catch (err) { setError(getErrorMessage(err, "Could not delete homework")); setBusy(false); }
   };
-  const item = homework.data;
   return <div className="mx-auto max-w-5xl space-y-5">
     <PageHeader title={item?.title ?? "Homework"} description="Assignment and student work" backHref="/dashboard/homework" action={canManage && <Button variant="destructive" disabled={busy} onClick={remove}>{busy ? "Deleting..." : "Delete assignment"}</Button>} />
-    {(homework.error || submissions.error || error) && <Alert type="error">{homework.error || submissions.error || error}</Alert>}
+    {(homework.error || teacherAssignments.error || submissions.error || error) && <Alert type="error">{homework.error || teacherAssignments.error || submissions.error || error}</Alert>}
+    {teacherAssignments.teacher && item && !teacherAssignments.loading && !assigned ? <Alert type="error">This assignment is not assigned to you.</Alert> : <>
     {homework.loading ? <Loading /> : item && <Card title="Assignment"><div className="grid gap-3 text-sm sm:grid-cols-2"><p><strong>Due:</strong> {new Date(item.due_date).toLocaleString()}</p><p><strong>Maximum points:</strong> {item.max_points}</p><p className="sm:col-span-2">{item.description}</p></div></Card>}
-    <Card title="Submissions">{submissions.loading ? <Loading /> : (submissions.data?.length ?? 0) === 0 ? <EmptyState>No submissions yet.</EmptyState> : <Table><THead><tr><TH>Student</TH><TH>Work</TH><TH>Submitted</TH><TH>Grade</TH></tr></THead><TBody>{submissions.data?.map((submission, index) => <tr key={getId(submission) || index}><TD>{submission.student_id}</TD><TD><p className="whitespace-pre-wrap">{submission.content}</p>{submission.attachment_urls?.map((url, attachmentIndex) => <p key={attachmentIndex}><a href={url} target="_blank" rel="noopener noreferrer" className="text-primary underline">Attachment {attachmentIndex + 1}</a></p>)}</TD><TD>{submission.submitted_at ? new Date(submission.submitted_at).toLocaleString() : "—"}</TD><TD>{canManage ? <GradeForm submission={submission} maxPoints={item?.max_points ?? 100} onSaved={submissions.reload} /> : submission.marks_obtained == null ? "Not graded" : `${submission.marks_obtained} / ${item?.max_points ?? 100}`}</TD></tr>)}</TBody></Table>}</Card>
+    <Card title="Submissions">{teacherAssignments.loading || submissions.loading ? <Loading /> : (submissions.data?.length ?? 0) === 0 ? <EmptyState>No submissions yet.</EmptyState> : <Table><THead><tr><TH>Student</TH><TH>Work</TH><TH>Submitted</TH><TH>Grade</TH></tr></THead><TBody>{submissions.data?.map((submission, index) => <tr key={getId(submission) || index}><TD>{submission.student_id}</TD><TD><p className="whitespace-pre-wrap">{submission.content}</p>{submission.attachment_urls?.map((url, attachmentIndex) => <p key={attachmentIndex}><a href={url} target="_blank" rel="noopener noreferrer" className="text-primary underline">Attachment {attachmentIndex + 1}</a></p>)}</TD><TD>{submission.submitted_at ? new Date(submission.submitted_at).toLocaleString() : "—"}</TD><TD>{canManage ? <GradeForm submission={submission} maxPoints={item?.max_points ?? 100} onSaved={submissions.reload} /> : submission.marks_obtained == null ? "Not graded" : `${submission.marks_obtained} / ${item?.max_points ?? 100}`}</TD></tr>)}</TBody></Table>}</Card>
+    </>}
   </div>;
 }

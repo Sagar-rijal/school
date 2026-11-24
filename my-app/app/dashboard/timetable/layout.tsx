@@ -9,6 +9,7 @@ export default function TimetableLayout({ children }: { children: React.ReactNod
           { href: "/dashboard/timetable/class", label: "Class timetable" },
           { href: "/dashboard/timetable/teacher", label: "Teacher schedule" },
           { href: "/dashboard/timetable/periods", label: "Periods" },
+          { href: "/dashboard/timetable/releases", label: "Publish" },
         ]}
       />
       {children}

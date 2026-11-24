@@ -21,7 +21,7 @@ export function logoutUser() {
   return request("/api/auth/logout", { method: "POST", redirectOnUnauthorized: false });
 }
 
-/** Changes the signed-in user's password; the backend refreshes the auth cookies. */
+/** The backend invalidates all sessions after a password change. */
 export function changePassword(current_password: string, new_password: string) {
   return request("/api/v1/school-backend/auth/change-password", {
     method: "POST",

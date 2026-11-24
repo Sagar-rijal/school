@@ -1,5 +1,7 @@
 import { apiRequest, unwrap, unwrapPage } from "./api";
 
+const BASE = "/api/v1/school-backend";
+
 export const MATERIAL_TYPES = ["DOCUMENT", "VIDEO", "AUDIO", "LINK", "SLIDES", "BOOK"] as const;
 export const MATERIAL_STATUSES = ["DRAFT", "PUBLISHED", "ARCHIVED"] as const;
 export type MaterialType = (typeof MATERIAL_TYPES)[number];
@@ -50,4 +52,23 @@ export function transitionMaterial(id: string, action: "publish" | "archive", ex
 
 export async function listMaterialVersions(id: string) {
   return unwrapPage<MaterialVersion>(await apiRequest(`/materials/${encodeURIComponent(id)}/versions`, { query: { limit: 50 } }));
+}
+
+export async function getMaterialVersion(id: string, versionId: string) {
+  return unwrap<MaterialVersion>(await apiRequest(`/materials/${encodeURIComponent(id)}/versions/${encodeURIComponent(versionId)}`));
+}
+
+/** Link for <a href>; the proxy attaches the session. Omit versionId for the current file. */
+export function materialDownloadUrl(id: string, versionId?: string) {
+  const qs = versionId ? `?version_id=${encodeURIComponent(versionId)}` : "";
+  return `${BASE}/materials/${encodeURIComponent(id)}/download${qs}`;
+}
+
+/** Swaps in a newly uploaded file and records a new version. */
+export function replaceMaterialFile(id: string, payload: { file_id: string; expected_revision: number; reason: string }) {
+  return apiRequest(`/materials/${encodeURIComponent(id)}/replace`, { method: "POST", body: payload });
+}
+
+export function deleteMaterial(id: string) {
+  return apiRequest(`/materials/${encodeURIComponent(id)}`, { method: "DELETE" });
 }
