@@ -13,7 +13,8 @@ import { useAcademicYears } from "@/hooks/use-academic-years";
 import { useQuery } from "@/hooks/use-query";
 import { hasPermission } from "@/lib/access";
 import { getId } from "@/lib/api";
-import { createTextNotice, IMPORTANCE_LEVELS, listSentNotices, type Importance } from "@/lib/notices";
+import { createCompleteNotice, createTextNotice, IMPORTANCE_LEVELS, listSentNotices, type Importance, type NoticeBlock } from "@/lib/notices";
+import { uploadFile } from "@/lib/files";
 import { formatEnum, getErrorMessage } from "@/lib/utils";
 
 export default function NoticesPage() {
@@ -26,6 +27,10 @@ export default function NoticesPage() {
   const [message, setMessage] = useState("");
   const [importance, setImportance] = useState<Importance>("NORMAL");
   const [publish, setPublish] = useState(true);
+  // Optional extras: when used, the notice is sent as a "complete" notice with sections and attachments
+  const [blocks, setBlocks] = useState<NoticeBlock[]>([]);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [formKey, setFormKey] = useState(0);
   const [after, setAfter] = useState("");
   const sent = useQuery(`notices-sent:${after}`, () => listSentNotices(after || undefined));
   const [busy, setBusy] = useState(false);
@@ -41,12 +46,20 @@ export default function NoticesPage() {
     if (importance === "URGENT" && session && !hasPermission(session, "notification:urgent")) {
       setError("You do not have permission to send urgent notices."); return;
     }
+    if (attachments.length > 10) { setError("Attach at most 10 files."); return; }
+    const filledBlocks = blocks.map((b) => ({ ...b, text: b.text.trim() })).filter((b) => b.text);
     setBusy(true);
     try {
-      await createTextNotice({ title: title.trim(), message: message.trim(), importance, publish,
-        audience: effectiveAudience === "SCHOOL" ? { scope: "SCHOOL" } : { scope: "CLASS", academic_year_id: value.year,
-          class_id: value.class, section_id: value.section || null } });
-      setTitle(""); setMessage(""); setResult(publish ? "Notice sent." : "Notice saved as a draft."); sent.reload();
+      const base = { title: title.trim(), message: message.trim(), importance, publish,
+        audience: effectiveAudience === "SCHOOL" ? { scope: "SCHOOL" as const } : { scope: "CLASS" as const, academic_year_id: value.year,
+          class_id: value.class, section_id: value.section || null } };
+      if (filledBlocks.length > 0 || attachments.length > 0) {
+        const attachment_ids = await Promise.all(attachments.map((file) => uploadFile(file, "notice")));
+        await createCompleteNotice({ ...base, blocks: filledBlocks, attachment_ids });
+      } else {
+        await createTextNotice(base);
+      }
+      setTitle(""); setMessage(""); setBlocks([]); setAttachments([]); setFormKey((k) => k + 1); setResult(publish ? "Notice sent." : "Notice saved as a draft."); sent.reload();
     } catch (err) { setError(getErrorMessage(err, "Could not create notice")); }
     finally { setBusy(false); }
   };
@@ -55,13 +68,23 @@ export default function NoticesPage() {
     <PageHeader title="Notices" description="School announcements and sent messages" />
     {(years.error || sent.error || error) && <Alert type="error">{years.error || sent.error || error}</Alert>}
     {result && <Alert type="success">{result}</Alert>}
-    {canSend && <Card title="Create text notice"><form onSubmit={submit} className="space-y-4">
+    {canSend && <Card title="Create notice"><form onSubmit={submit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2"><Field label="Title" htmlFor="notice-title" required><Input id="notice-title" required maxLength={200} value={title} onChange={(e) => setTitle(e.target.value)} /></Field>
         <Field label="Importance" htmlFor="notice-importance"><Select id="notice-importance" value={importance} onChange={(e) => setImportance(e.target.value as Importance)}>{IMPORTANCE_LEVELS.filter((item) => item !== "URGENT" || (session && hasPermission(session, "notification:urgent"))).map((item) => <option key={item} value={item}>{formatEnum(item)}</option>)}</Select></Field>
         <Field label="Audience" htmlFor="notice-audience"><Select id="notice-audience" value={effectiveAudience} onChange={(e) => setAudience(e.target.value as "SCHOOL" | "CLASS")}><option value="SCHOOL" disabled={!canSendSchoolwide}>Whole school</option><option value="CLASS">Class or section</option></Select></Field>
       </div>
       {effectiveAudience === "CLASS" && <ClassSectionPicker years={years.years} value={value} onChange={setSelection} />}
       <Field label="Message" htmlFor="notice-message" required><textarea id="notice-message" required maxLength={10000} rows={5} value={message} onChange={(e) => setMessage(e.target.value)} className="w-full rounded-md border border-input bg-transparent p-3 text-sm" /></Field>
+      <div className="space-y-2">
+        <p className="text-sm font-medium">Extra sections <span className="font-normal text-muted-foreground">(optional)</span></p>
+        {blocks.map((block, i) => <div key={i} className="flex flex-wrap items-start gap-2">
+          <Select aria-label="Section type" value={block.kind} onChange={(e) => setBlocks(blocks.map((b, j) => j === i ? { ...b, kind: e.target.value as NoticeBlock["kind"] } : b))} className="w-auto"><option value="HEADING">Heading</option><option value="PARAGRAPH">Paragraph</option><option value="BULLET">Bullet point</option></Select>
+          <Input aria-label="Section text" maxLength={4000} value={block.text} onChange={(e) => setBlocks(blocks.map((b, j) => j === i ? { ...b, text: e.target.value } : b))} className="min-w-48 flex-1" />
+          <Button type="button" variant="outline" size="sm" onClick={() => setBlocks(blocks.filter((_, j) => j !== i))}>Remove</Button>
+        </div>)}
+        {blocks.length < 32 && <Button type="button" variant="outline" size="sm" onClick={() => setBlocks([...blocks, { kind: "PARAGRAPH", text: "" }])}>+ Add section</Button>}
+      </div>
+      <Field label="Attachments" htmlFor="notice-files" hint="Up to 10 files."><Input key={formKey} id="notice-files" type="file" multiple onChange={(e) => setAttachments([...(e.target.files ?? [])])} /></Field>
       <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} /> Publish now</label>
       <Button type="submit" disabled={busy}>{busy ? "Saving..." : publish ? "Send notice" : "Save draft"}</Button>
     </form></Card>}

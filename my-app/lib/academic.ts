@@ -67,6 +67,10 @@ export async function listSections(filters: { class_id?: string } = {}) {
   return unwrap<Section[]>(await apiRequest("/academic/sections", { query: filters }));
 }
 
+export async function getSection(sectionId: string) {
+  return unwrap<Section>(await apiRequest(`/academic/sections/${sectionId}`));
+}
+
 export async function createSection(payload: SectionPayload) {
   return apiRequest("/academic/sections", { method: "POST", body: payload });
 }

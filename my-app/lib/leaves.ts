@@ -22,7 +22,8 @@ export async function listLeaveApplications(status?: LeaveStatus) {
   return unwrapPage<LeaveApplication>(await apiRequest("/leaves", { query: { status } })).items;
 }
 
-export function applyForLeave(payload: { leave_type: LeaveType; reason: string; start_date: string; end_date: string }) {
+/** student_id: a parent applying for their child (omit for staff). */
+export function applyForLeave(payload: { leave_type: LeaveType; reason: string; start_date: string; end_date: string; student_id?: string | null }) {
   return apiRequest("/leaves", { method: "POST", body: payload });
 }
 

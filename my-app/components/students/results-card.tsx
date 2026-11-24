@@ -10,7 +10,8 @@ import { getStudentReportCards, getStudentResults, listExamSchedules, reportCard
 import { cn, formatDate, formatEnum } from "@/lib/utils";
 
 /** A student's exam results and report cards. */
-export default function ResultsCard({ studentId }: { studentId: string }) {
+/** linkReportCards: false for viewers who can't open the staff report-card page (students, parents). */
+export default function ResultsCard({ studentId, linkReportCards = true }: { studentId: string; linkReportCards?: boolean }) {
   const lookup = useAcademicLookup();
   const results = useQuery(`student-results:${studentId}`, () => getStudentResults(studentId));
   const cards = useQuery(`student-report-cards:${studentId}`, () => getStudentReportCards(studentId));
@@ -31,19 +32,26 @@ export default function ResultsCard({ studentId }: { studentId: string }) {
           <div className="flex flex-wrap gap-2">
             {cards.data!.map((card) => {
               const s = reportCardSummary(card);
-              return (
-                <Link
-                  key={getId(card)}
-                  href={`/dashboard/exams/report-cards/${getId(card)}`}
-                  className="rounded-md border px-3 py-2 text-sm transition-colors hover:bg-accent"
-                >
+              const body = (
+                <>
                   <span className="font-medium">{card.exam_type ? formatEnum(card.exam_type) : "Report card"}</span>
                   <span className="text-muted-foreground">
                     {" "}· {lookup.yearName(card.academic_year_id)}
                     {s.percentage != null ? ` · ${Math.round(s.percentage)}%` : ""}
                     {s.grade ? ` · ${s.grade}` : ""}
                   </span>
+                </>
+              );
+              return linkReportCards ? (
+                <Link
+                  key={getId(card)}
+                  href={`/dashboard/exams/report-cards/${getId(card)}`}
+                  className="rounded-md border px-3 py-2 text-sm transition-colors hover:bg-accent"
+                >
+                  {body}
                 </Link>
+              ) : (
+                <span key={getId(card)} className="rounded-md border px-3 py-2 text-sm">{body}</span>
               );
             })}
           </div>

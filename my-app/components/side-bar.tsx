@@ -22,10 +22,13 @@ import {
   LogOut,
   Menu,
   X,
+  Upload,
   type LucideIcon,
 } from "lucide-react"
 import { logoutUser } from "@/lib/auth"
-import { isTeacherUser, roleLabel, visibleAreas, type Session } from "@/lib/access"
+import { isFamilyUser, isPlatformUser, isTeacherUser, roleLabel, visibleAreas, type Session } from "@/lib/access"
+import { getUnreadNoticeCount } from "@/lib/notices"
+import { useQuery } from "@/hooks/use-query"
 import { useAuthStore } from "@/store/useAuthStore"
 
 type NavLink = { href: string; label: string; icon: LucideIcon; exact?: boolean }
@@ -44,14 +47,17 @@ const ICONS: Record<string, LucideIcon> = {
   graduation: GraduationCap,
   users: Users,
   briefcase: BriefcaseBusiness,
+  upload: Upload,
 }
+
+const NOTICE_LINKS = new Set(["/dashboard/notices", "/dashboard/teacher/notices", "/dashboard/family/notices"])
 
 const GROUP_ORDER = ["Platform", "Setup", "Academics", "Finance", "People"] as const
 
 /** Sidebar groups for this user: only areas their role can use, empty groups dropped. */
 function navGroups(session: Session | null): { title: string; links: NavLink[] }[] {
   // exact: /dashboard is the overview, every other page lives under it
-  const overview: NavLink = { href: "/dashboard", label: session && isTeacherUser(session) ? "My day" : "Overview", icon: LayoutDashboard, exact: true }
+  const overview: NavLink = { href: "/dashboard", label: session && isTeacherUser(session) ? "My day" : session && isFamilyUser(session) ? "Home" : "Overview", icon: LayoutDashboard, exact: true }
   if (!session) return [{ title: "Home", links: [overview] }]
 
   const areas = visibleAreas(session)
@@ -77,6 +83,8 @@ function SidebarContent({
   const user = useAuthStore((s) => s.user)
   const clearAuthUser = useAuthStore((s) => s.clearAuthUser)
   const [open, setOpen] = useState(false)
+  // Badge on the notices link; the count is best-effort, so errors are ignored
+  const unread = useQuery(session && !isPlatformUser(session) ? `unread-notices:${pathname}` : null, () => getUnreadNoticeCount().catch(() => 0))
   const containerRef = useRef<HTMLDivElement>(null)
 
   const handleLogout = async () => {
@@ -140,7 +148,12 @@ function SidebarContent({
                   `}
                 >
                   <Icon className="w-4 h-4" />
-                  {link.label}
+                  <span className="flex-1">{link.label}</span>
+                  {NOTICE_LINKS.has(link.href) && (unread.data ?? 0) > 0 && (
+                    <span className="rounded-full bg-red-600 px-1.5 text-[10px] font-semibold leading-4 text-white" aria-label={`${unread.data} unread`}>
+                      {unread.data! > 99 ? "99+" : unread.data}
+                    </span>
+                  )}
                 </Link>
               )
             })}

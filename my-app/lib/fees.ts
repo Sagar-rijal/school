@@ -20,6 +20,10 @@ export async function listFeeCategories() {
   return unwrap<FeeCategory[]>(await apiRequest("/fees/categories")) ?? [];
 }
 
+export async function getFeeCategory(id: string) {
+  return unwrap<FeeCategory>(await apiRequest(`/fees/categories/${id}`));
+}
+
 export function createFeeCategory(payload: FeeCategoryPayload) {
   return apiRequest("/fees/categories", { method: "POST", body: payload });
 }
@@ -120,6 +124,26 @@ export async function listPendingPaymentSubmissions(after?: string) {
   );
 }
 
+export async function listStudentPaymentSubmissions(studentId: string, after?: string) {
+  return unwrapPage<PaymentSubmission>(
+    await apiRequest(`/fees/payment-submissions/student/${encodeURIComponent(studentId)}`, { query: { limit: 50, after } })
+  );
+}
+
+/** Family-side: upload proof first (see uploadFile), then submit it for review. Does not settle the invoice. */
+export function submitPaymentEvidence(payload: {
+  student_id: string;
+  invoice_id: string;
+  proof_file_id: string;
+  amount_paid: number;
+  payment_mode: string;
+  payment_date: string;
+  transaction_reference?: string | null;
+  remarks?: string | null;
+}) {
+  return apiRequest("/fees/payment-submissions", { method: "POST", body: payload, headers: { "Idempotency-Key": crypto.randomUUID() } });
+}
+
 export async function getPaymentSubmission(id: string) {
   return unwrap<PaymentSubmission>(await apiRequest(`/fees/payment-submissions/${encodeURIComponent(id)}`));
 }
@@ -179,4 +203,88 @@ export function suggestInvoiceNumber(admissionNumber?: string) {
 /** Suggested receipt number, e.g. RCPT-20260914-9F2A. The backend rejects duplicates. */
 export function suggestReceiptNumber() {
   return `RCPT-${stamp()}-${suffix()}`;
+}
+
+// ── Miscellaneous charges (one-off fees for chosen students) ──
+
+export function createMiscellaneousCharges(payload: {
+  academic_year_id: string;
+  class_id: string;
+  student_ids: string[];
+  description: string;
+  amount: number;
+  due_date?: string | null;
+}) {
+  return apiRequest("/fees/miscellaneous-charges", { method: "POST", body: payload, headers: { "Idempotency-Key": crypto.randomUUID() } });
+}
+
+// ── Due-fee reminders ──
+
+export type DueNoticePreview = {
+  student_id?: string;
+  student_name?: string;
+  invoice_count?: number;
+  total_due?: number;
+  balance_due?: number;
+  recipients?: unknown[];
+  [key: string]: unknown;
+};
+
+/** due_before is a YYYY-MM-DD date input value. */
+export async function previewDueNotice(studentIds: string[], dueBefore: string) {
+  return unwrap<unknown>(await apiRequest("/fees/notices/preview-due", {
+    method: "POST",
+    body: { student_ids: studentIds, due_before: `${dueBefore}T23:59:59` },
+  }));
+}
+
+export function sendDueNotice(studentIds: string[], dueBefore: string) {
+  return apiRequest("/fees/notices/send-due", {
+    method: "POST",
+    body: { student_ids: studentIds, due_before: `${dueBefore}T23:59:59` },
+    headers: { "Idempotency-Key": crypto.randomUUID() },
+  });
+}
+
+// ── Fee notifications (family inbox) ──
+
+export type FeeNotification = { id?: string; _id?: string; title?: string; message?: string; created_at?: string; read_at?: string | null; is_read?: boolean };
+
+export async function listFeeNotifications(unreadOnly = false, after?: string) {
+  return unwrapPage<FeeNotification>(await apiRequest("/fees/notifications/inbox", { query: { limit: 50, after, unread_only: unreadOnly } }));
+}
+
+export function markFeeNotificationRead(id: string) {
+  return apiRequest(`/fees/notifications/inbox/${encodeURIComponent(id)}/read`, { method: "POST" });
+}
+
+// ── Fee statement exports (generated in the background) ──
+
+export type FeeStatementExport = {
+  id?: string;
+  _id?: string;
+  export_id?: string;
+  status?: string;
+  file_id?: string | null;
+  download_url?: string | null;
+  error?: string | null;
+  created_at?: string;
+};
+
+export async function createFeeStatementExport(filters: { student_id?: string; academic_year_id?: string; class_id?: string; due_before?: string }) {
+  const res = await apiRequest("/fees/report/exports", {
+    method: "POST",
+    body: {
+      student_id: filters.student_id || null,
+      academic_year_id: filters.academic_year_id || null,
+      class_id: filters.class_id || null,
+      due_before: filters.due_before ? `${filters.due_before}T23:59:59` : null,
+    },
+    headers: { "Idempotency-Key": crypto.randomUUID() },
+  });
+  return unwrap<FeeStatementExport>(res);
+}
+
+export async function getFeeStatementExport(exportId: string) {
+  return unwrap<FeeStatementExport>(await apiRequest(`/fees/report/exports/${encodeURIComponent(exportId)}`));
 }

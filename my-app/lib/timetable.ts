@@ -18,6 +18,10 @@ export async function listPeriods(academicYearId?: string) {
   return (unwrap<PeriodDefinition[]>(res) ?? []).sort((a, b) => a.period_number - b.period_number);
 }
 
+export async function getPeriod(periodId: string) {
+  return unwrap<PeriodDefinition>(await apiRequest(`/timetable/periods/${periodId}`));
+}
+
 export function createPeriod(payload: PeriodDefinitionPayload) {
   return apiRequest("/timetable/periods", { method: "POST", body: payload });
 }
@@ -127,4 +131,84 @@ export function normalizeWeekly(raw: unknown, defaultDay?: DayOfWeek): Timetable
     }
   }
   return out;
+}
+
+// ── Versioned releases (draft → publish, with dated overrides) ──
+
+export type TimetableRelease = {
+  id?: string;
+  _id?: string;
+  release_id?: string;
+  status?: string;
+  revision?: number;
+  draft_version?: number;
+  effective_from?: string;
+  published_at?: string;
+};
+
+export type PublishedTimetable = {
+  release?: TimetableRelease;
+  revision: number;
+  releaseId: string;
+  effectiveFrom?: string;
+  entries: TimetableEntry[];
+};
+
+export function releaseId(r?: TimetableRelease | null) {
+  return r?.release_id ?? r?.id ?? r?._id ?? "";
+}
+
+type Json2 = Record<string, unknown>;
+
+/** Published response shape isn't documented: accepts { release, entries } or a flat release with entries. */
+function toPublished(raw: unknown): PublishedTimetable {
+  const obj = (raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {}) as Json2;
+  const release = (obj.release && typeof obj.release === "object" ? obj.release : obj) as TimetableRelease & Json2;
+  const entriesSource = obj.entries ?? obj.schedule ?? obj.days ?? release.entries ?? (Array.isArray(raw) ? raw : []);
+  return {
+    release,
+    revision: Number(release.revision ?? obj.revision ?? 0) || 0,
+    releaseId: releaseId(release) || String(obj.release_id ?? ""),
+    effectiveFrom: (release.effective_from ?? obj.effective_from) as string | undefined,
+    entries: normalizeWeekly(entriesSource),
+  };
+}
+
+export async function getPublishedClassTimetable(classId: string, sectionId: string, academicYearId: string, asOf?: string) {
+  const res = await apiRequest(`/timetable/class/${classId}/${sectionId}/published`, { query: { academic_year_id: academicYearId, as_of: asOf } });
+  return toPublished(unwrap(res));
+}
+
+/**
+ * Saves a draft release. expected_revision is the currently published revision (0 if none),
+ * so a draft built on stale data is rejected.
+ */
+export async function saveTimetableDraft(payload: {
+  academic_year_id: string;
+  class_id: string;
+  section_id: string;
+  effective_from: string;
+  expected_revision: number;
+  expected_draft_version?: number;
+  entries: Omit<TimetableEntryPayload, "academic_year_id" | "class_id" | "section_id">[];
+}) {
+  return unwrap<TimetableRelease>(await apiRequest("/timetable/releases/drafts", { method: "POST", body: payload }));
+}
+
+export function publishTimetableRelease(id: string, revision: number) {
+  return apiRequest(`/timetable/releases/${encodeURIComponent(id)}/publish`, { method: "POST", body: { revision } });
+}
+
+/** One-day change: a substitute teacher or a cancelled period. */
+export function addTimetableOverride(id: string, payload: { schedule_date: string; period_number: number; action: "SUBSTITUTE" | "CANCEL"; substitute_teacher_id?: string | null; reason: string }) {
+  return apiRequest(`/timetable/releases/${encodeURIComponent(id)}/overrides`, { method: "POST", body: payload });
+}
+
+/** Student / parent views of the published timetable. */
+export async function getMyStudentSchedule(asOf?: string) {
+  return toPublished(unwrap(await apiRequest("/timetable/student/me/published", { query: { as_of: asOf } })));
+}
+
+export async function getLinkedStudentSchedule(studentId: string, asOf?: string) {
+  return toPublished(unwrap(await apiRequest(`/timetable/student/${encodeURIComponent(studentId)}/published`, { query: { as_of: asOf } })));
 }

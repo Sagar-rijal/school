@@ -12,6 +12,7 @@ import EnrollmentsPanel from "@/components/students/enrollments-panel";
 import FeesCard from "@/components/students/fees-card";
 import ParentsPanel from "@/components/students/parents-panel";
 import ResultsCard from "@/components/students/results-card";
+import RollsCard from "@/components/students/rolls-card";
 import { useQuery } from "@/hooks/use-query";
 import { useSession } from "@/components/session-provider";
 import { hasPermission } from "@/lib/access";
@@ -94,6 +95,10 @@ export default function StudentProfilePage({
           <div className="grid items-start gap-6 lg:grid-cols-2">
             <AttendanceCard studentId={id} />
             <FeesCard studentId={id} />
+          </div>
+
+          <div className="grid items-start gap-6 lg:grid-cols-2">
+            <RollsCard studentId={id} canManage={!!session && (hasPermission(session, "student:update") || hasPermission(session, "student:manage") || session.roles.includes("SCHOOL_ADMIN"))} />
           </div>
 
           <ResultsCard studentId={id} />

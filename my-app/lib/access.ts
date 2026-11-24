@@ -45,6 +45,13 @@ export function isTeacherUser(s: Session) {
   return !isPlatformUser(s) && s.roles.includes("TEACHER") && !s.roles.includes("SCHOOL_ADMIN");
 }
 
+const STAFF_ROLES = ["SCHOOL_ADMIN", "TEACHER", "ACCOUNTANT"];
+
+/** Students and parents get the family portal (a staff member who is also a parent keeps the staff workspace). */
+export function isFamilyUser(s: Session) {
+  return !isPlatformUser(s) && (s.roles.includes("STUDENT") || s.roles.includes("PARENT")) && !s.roles.some((r) => STAFF_ROLES.includes(r));
+}
+
 /** Supports exact permissions plus "*" and "module:*" wildcards. */
 export function hasPermission(s: Session, permission: string) {
   const [module] = permission.split(":");
@@ -95,6 +102,7 @@ export const AREAS: Area[] = [
 
   // School — gated by permission
   { href: "/dashboard/academic-years", label: "Academic years", icon: "calendar-range", group: "Setup", rule: { audience: "school", permissions: ["academic:read"] } },
+  { href: "/dashboard/imports", label: "Bulk import", icon: "upload", group: "Setup", rule: { audience: "school", roles: ["SCHOOL_ADMIN"], permissions: ["import:manage", "import:create"] } },
   { href: "/dashboard/calendar", label: "Calendar", icon: "calendar-range", group: "Setup", rule: { audience: "school", permissions: ["calendar:read", "calendar:manage"] } },
   { href: "/dashboard/classes", label: "Classes", icon: "layers", group: "Setup", rule: { audience: "school", permissions: ["academic:read"] } },
   { href: "/dashboard/subjects", label: "Subjects", icon: "book", group: "Setup", rule: { audience: "school", permissions: ["academic:read"] } },
@@ -121,6 +129,18 @@ export const AREAS: Area[] = [
   { href: "/dashboard/teacher/exams", label: "Enter marks", icon: "clipboard", group: "Academics", rule: { audience: "school", permissions: ["exam:marks_entry"] } },
   { href: "/dashboard/teacher/notices", label: "My notices", icon: "clipboard", group: "People", rule: { audience: "school", permissions: ["notification:read"] } },
   { href: "/dashboard/teacher/leave", label: "My leave", icon: "calendar-check", group: "People", rule: { audience: "school", permissions: ["leave:apply", "leave:read"] } },
+
+  // Family portal (students and parents). Data is scoped to the signed-in student or the parent's children.
+  ...([
+    ["/dashboard/family/timetable", "Timetable", "clock", "Academics"],
+    ["/dashboard/family/homework", "Homework", "clipboard", "Academics"],
+    ["/dashboard/family/materials", "Study materials", "book", "Academics"],
+    ["/dashboard/family/progress", "Attendance & results", "graduation", "Academics"],
+    ["/dashboard/family/fees", "Fees", "rupee", "Finance"],
+    ["/dashboard/family/notices", "Notices", "clipboard", "People"],
+    ["/dashboard/family/meetings", "Parent meetings", "calendar-range", "People"],
+    ["/dashboard/family/leave", "Leave", "calendar-check", "People"],
+  ] as const).map(([href, label, icon, group]): Area => ({ href, label, icon, group, rule: { audience: "school", roles: ["STUDENT", "PARENT"] } })),
 ];
 
 /** Pages every signed-in user may open. */
@@ -137,6 +157,7 @@ function areaFor(pathname: string) {
 
 export function canOpenPath(s: Session, pathname: string) {
   if (OPEN_PATHS.includes(pathname)) return true;
+  if (isFamilyUser(s)) return pathname === "/dashboard/family" || pathname.startsWith("/dashboard/family/");
   if (isTeacherUser(s)) {
     const allowed = ["/dashboard/teacher", "/dashboard/attendance", "/dashboard/homework", "/dashboard/materials"];
     if (/^\/dashboard\/exams\/schedules\/[^/]+\/marks$/.test(pathname)) {
@@ -150,6 +171,7 @@ export function canOpenPath(s: Session, pathname: string) {
 }
 
 export function visibleAreas(s: Session) {
+  if (isFamilyUser(s)) return AREAS.filter((a) => a.href.startsWith("/dashboard/family/"));
   if (isTeacherUser(s)) {
     const teacherPaths = new Set([
       "/dashboard/teacher", "/dashboard/teacher/classes", "/dashboard/teacher/schedule",
@@ -160,7 +182,7 @@ export function visibleAreas(s: Session) {
     return AREAS.filter((a) => teacherPaths.has(a.href) && canAccess(s, a.rule))
       .sort((a, b) => order.indexOf(a.href) - order.indexOf(b.href));
   }
-  return AREAS.filter((a) => !a.href.startsWith("/dashboard/teacher") && canAccess(s, a.rule));
+  return AREAS.filter((a) => !a.href.startsWith("/dashboard/teacher") && !a.href.startsWith("/dashboard/family") && canAccess(s, a.rule));
 }
 
 /** "SCHOOL_ADMIN" → "School admin", for the sidebar badge. */

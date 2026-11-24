@@ -59,6 +59,9 @@ export default function StudentsPage({ searchParams }: { searchParams: Promise<F
             <Button variant="outline" asChild>
               <Link href="/dashboard/parents">Parents</Link>
             </Button>
+            <Button variant="outline" asChild>
+              <Link href="/dashboard/students/roll-policies">Roll policies</Link>
+            </Button>
             <Button asChild>
               <Link href="/dashboard/students/new">+ Add student</Link>
             </Button>

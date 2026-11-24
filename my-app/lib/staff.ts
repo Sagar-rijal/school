@@ -17,6 +17,10 @@ export async function listDepartments() {
   return unwrap<Department[]>(await apiRequest("/staff/departments")) ?? [];
 }
 
+export async function getDepartment(deptId: string) {
+  return unwrap<Department>(await apiRequest(`/staff/departments/${deptId}`));
+}
+
 export function createDepartment(payload: DepartmentPayload) {
   return apiRequest("/staff/departments", { method: "POST", body: payload });
 }

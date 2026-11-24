@@ -49,3 +49,13 @@ export async function listHomeworkSubmissions(id: string) {
 export function gradeHomeworkSubmission(id: string, payload: { marks_obtained: number; feedback?: string | null }) {
   return apiRequest(`/homework/submissions/${encodeURIComponent(id)}/grade`, { method: "PUT", body: payload });
 }
+
+// ── Student side ──
+
+export function submitHomework(id: string, payload: { content: string; attachment_urls?: string[] }) {
+  return apiRequest(`/homework/${encodeURIComponent(id)}/submit`, { method: "POST", body: payload });
+}
+
+export async function getMyHomeworkSubmission(id: string) {
+  return unwrap<HomeworkSubmission | null>(await apiRequest(`/homework/${encodeURIComponent(id)}/my-submission`));
+}
